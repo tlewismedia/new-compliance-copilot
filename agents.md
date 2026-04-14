@@ -167,6 +167,97 @@ Why: auto-actions that shape the record are hard to walk back. One confirmation 
 
 ---
 
+## How to dispatch agents
+
+The orchestrator invokes subagents via the `Agent` tool with complete, self-contained prompts. Templates below.
+
+### Dispatching Spec Writer
+
+```javascript
+Agent({
+  description: "Write spec for issue #<N>",
+  subagent_type: "general-purpose",
+  prompt: `Read GitHub issue #<N> in tlewismedia/new-compliance-copilot.
+
+Context:
+- Goal: <state the goal>
+- Related: plan.md, agentic-strategy.md, relevant code
+
+Produce a spec comment covering:
+- Summary (1 sentence)
+- Scope (what will be done)
+- Acceptance Criteria (numbered, testable)
+- Files Likely to Change
+- Non-Goals
+- Implementation Notes
+
+Output as [SPEC AGENT] comment ready to post on the issue.
+Do not modify code or change issue state.`
+})
+```
+
+### Dispatching Implementer
+
+```javascript
+Agent({
+  description: "Implement issue #<N>",
+  subagent_type: "general-purpose",
+  prompt: `Read issue #<N> in tlewismedia/new-compliance-copilot and its [SPEC AGENT] comment.
+
+Implement on a worktree branch named issue-<N>/<short-desc>.
+
+Spec summary: <paste the spec>
+Acceptance Criteria:
+- <criterion 1>
+- <criterion 2>
+
+Relevant files: <list paths>
+
+Rules:
+- Commits prefixed AGENT:
+- Do not change issue state or open a PR
+- Do not exceed spec scope
+
+Report back with: branch name, commit SHAs, one-paragraph summary, testing notes.`
+})
+```
+
+### Dispatching Reviewer
+
+```javascript
+Agent({
+  description: "Review implementation for issue #<N>",
+  subagent_type: "general-purpose",
+  prompt: `Review the implementation on branch issue-<N>/<short-desc>.
+
+Spec: <paste the [SPEC AGENT] comment>
+Acceptance Criteria:
+- <criterion 1>
+- <criterion 2>
+
+Verify:
+1. Each criterion is satisfied by the code
+2. Tests are meaningful and cover edge cases
+3. No contradictions with plan.md or project-goals.md
+4. No obvious bugs or security issues
+
+Output [REVIEWER AGENT] APPROVED or a numbered list of issues with file:line references.
+Do not post to GitHub; orchestrator will gate confirmation.`
+})
+```
+
+### Dispatch principles
+
+From `agentic-strategy.md`:
+
+1. **Self-contained prompts.** Subagents start with zero context. Re-state goal, constraints, expected output.
+2. **Synthesise findings.** Never tell a subagent "based on the other agent's output, do X." Read the output, understand it, then decide what to ask.
+3. **Specific instructions.** Include file paths, line numbers, acceptance criteria — don't make the agent guess.
+4. **Parallelise independent work.** Multiple spec writers can run in parallel. Implementation and review must be serial.
+5. **Trust but verify.** Check the actual diff/code before accepting an agent's summary as complete.
+
+---
+
 ## Memory
 
 The orchestrator maintains `memory/` across sessions. Memory captures:
