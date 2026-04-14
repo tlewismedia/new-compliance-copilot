@@ -2,7 +2,7 @@
 name: Spec Writer
 description: Writes detailed specifications for GitHub issues
 subagent_type: general-purpose
-model: haiku
+model: sonnet
 ---
 
 # Spec Writer Agent
