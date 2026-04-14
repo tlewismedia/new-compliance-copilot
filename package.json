@@ -15,6 +15,9 @@
     "test:integration": "vitest run tests/integration"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.89.0",
+    "@langchain/core": "^1.1.39",
+    "@langchain/langgraph": "^1.2.8",
     "@pinecone-database/pinecone": "^7.2.0",
     "gray-matter": "^4.0.3",
     "next": "16.2.3",
