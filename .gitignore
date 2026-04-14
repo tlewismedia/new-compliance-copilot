@@ -36,6 +36,7 @@ build/
 out/
 .next/
 .turbo/
+*.tsbuildinfo
 
 # Claude local
 .claude/settings.local.json
