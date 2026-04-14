@@ -94,10 +94,9 @@ If a spec genuinely needs research the orchestrator doesn't have (rare), the orc
 4. Implementer  → writes code + tests on a worktree branch
 5. Orchestrator → labels `in-review`
 6. Reviewer     → outputs APPROVED or NEEDS CHANGES
-7. Human        → confirms before the verdict is posted
-8a. If NEEDS CHANGES → back to step 4
-8b. If APPROVED      → orchestrator opens PR with `Closes #<N>`
-9. Human        → merges PR (auto-closes issue)
+7a. If NEEDS CHANGES → orchestrator labels `needs-changes`; back to step 4
+7b. If APPROVED      → orchestrator labels `approved` and opens PR with `Closes #<N>` automatically
+8. Human        → reviews diff in the PR and merges (auto-closes issue)
 ```
 
 ---
@@ -130,17 +129,17 @@ Only the orchestrator sets these.
 
 - Progress comments (`Starting work…`, `Implementation complete`).
 - Label transitions (orchestrator only).
+- Opening a PR after reviewer APPROVED (so the human can review the diff in GitHub).
 
 **Requires human confirmation before action:**
 
-- Posting a reviewer verdict.
-- Opening a PR.
+- Posting a reviewer verdict as a GitHub comment.
 - Merging a PR.
 - Closing an issue.
 - Deleting branches.
 - Any `git reset --hard`, force push, or amend of pushed commits.
 
-Why: auto-actions that shape the record are hard to walk back. One confirmation gate is cheap; an unwanted review comment or premature close is not.
+Why: merging and closing are hard to reverse. PRs open automatically so the human has a diff to review before deciding to merge.
 
 ---
 
