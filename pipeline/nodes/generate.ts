@@ -18,7 +18,7 @@ function formatContext(state: GraphState): string {
     .map((r, i) => {
       const m = r.metadata;
       const header = m
-        ? `[^${i + 1}] ${m.citationId} — ${m.title}${m.headingPath ? ` (${m.headingPath})` : ""}`
+        ? `[^${i + 1}] ${m.citationIdDisplay} — ${m.title}${m.headingPath ? ` (${m.headingPath})` : ""}`
         : `[^${i + 1}]`;
       return `${header}\n${r.text}`;
     })

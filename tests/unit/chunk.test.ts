@@ -25,6 +25,7 @@ const BASE_METADATA: Omit<
   source: "TestSource",
   authority: "SEC",
   citationId: "TEST-DOC",
+  citationIdDisplay: "TEST-DOC",
   jurisdiction: "US-Federal",
   docType: "guidance",
   effectiveDate: "2024-01-01",

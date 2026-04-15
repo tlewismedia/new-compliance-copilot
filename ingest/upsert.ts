@@ -10,6 +10,7 @@ type PineconeIngestRecord = {
   source: string;
   authority: string;
   citation_id: string;
+  citation_id_display: string;
   jurisdiction: string;
   doc_type: string;
   effective_date: string;
@@ -31,6 +32,7 @@ function chunkToRecord(chunk: Chunk): PineconeIngestRecord {
     source: m.source,
     authority: m.authority,
     citation_id: m.citationId,
+    citation_id_display: m.citationIdDisplay,
     jurisdiction: m.jurisdiction,
     doc_type: m.docType,
     effective_date: m.effectiveDate,

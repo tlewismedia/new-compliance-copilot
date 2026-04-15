@@ -89,6 +89,7 @@ async function main(): Promise<void> {
         "title",
         "source",
         "citation_id",
+        "citation_id_display",
         "jurisdiction",
         "doc_type",
         "effective_date",
@@ -121,6 +122,7 @@ async function main(): Promise<void> {
           frontMatter["authority"] ?? "Kestrel"
         ) as ChunkMetadata["authority"],
         citationId: String(frontMatter["citation_id"]),
+        citationIdDisplay: String(frontMatter["citation_id_display"]),
         jurisdiction: String(
           frontMatter["jurisdiction"]
         ) as ChunkMetadata["jurisdiction"],

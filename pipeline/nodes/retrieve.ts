@@ -25,6 +25,7 @@ export function createRetrieveNode(
         authority: (str(f, "authority") ||
           "Kestrel") as ChunkMetadata["authority"],
         citationId: str(f, "citation_id"),
+        citationIdDisplay: str(f, "citation_id_display"),
         jurisdiction: str(f, "jurisdiction") as ChunkMetadata["jurisdiction"],
         docType: str(f, "doc_type") as ChunkMetadata["docType"],
         effectiveDate: str(f, "effective_date"),

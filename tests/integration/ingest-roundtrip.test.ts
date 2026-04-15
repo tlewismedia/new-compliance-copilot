@@ -49,6 +49,7 @@ describe.skipIf(!hasCreds)("Ingest round-trip (requires Pinecone creds)", () => 
           frontMatter["authority"] ?? "Kestrel"
         ) as ChunkMetadata["authority"],
         citationId: String(frontMatter["citation_id"]),
+        citationIdDisplay: String(frontMatter["citation_id_display"] ?? frontMatter["citation_id"]),
         jurisdiction: String(
           frontMatter["jurisdiction"]
         ) as ChunkMetadata["jurisdiction"],

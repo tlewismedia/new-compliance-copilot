@@ -35,6 +35,7 @@ describe("pipeline/nodes/retrieve — v2 metadata hydration", () => {
           source: "SEC",
           authority: "SEC",
           citation_id: "17-CFR-240.15l-1",
+          citation_id_display: "17 CFR 240.15l-1",
           jurisdiction: "US-Federal",
           doc_type: "regulation",
           effective_date: "2020-06-30",
@@ -59,6 +60,7 @@ describe("pipeline/nodes/retrieve — v2 metadata hydration", () => {
     const r = out.retrievals![0];
     expect(r.chunkId).toBe("17-CFR-240.15l-1::(a)(2)(ii)::p0");
     expect(r.metadata?.authority).toBe("SEC");
+    expect(r.metadata?.citationIdDisplay).toBe("17 CFR 240.15l-1");
     expect(r.metadata?.versionStatus).toBe("current");
     expect(r.metadata?.topicTags).toEqual([
       "best-interest",

@@ -57,12 +57,13 @@ Every record in Pinecone is **flat** — no nested `metadata` object, no object 
 
 | Field | Type | Example |
 |---|---|---|
-| `id` | string | `17-CFR-240.15l-1::(a)(2)(ii)::p0` (regulatory) · `Kestrel-WSP-Equities::chunk_0` (fallback) |
+| `id` | string | `17-CFR-240.15l-1::(a)(2)(ii)::p0` (regulatory) · `Kestrel-WSP-Equities::supervisory-hierarchy` (fallback) |
 | `chunk_text` | string | chunk body (embedded by Pinecone via index `fieldMap`) |
 | `title` | string | `"Regulation Best Interest — 17 CFR 240.15l-1"` |
 | `source` | string | `"SEC"` |
 | `authority` | string | `"SEC"` / `"FINRA"` / `"MSRB"` / `"FinCEN"` / `"Kestrel"` |
 | `citation_id` | string | `"17-CFR-240.15l-1"` |
+| `citation_id_display` | string | `"17 CFR 240.15l-1"` (human-readable form shown in LLM prompt citations) |
 | `jurisdiction` | string | `"US-Federal"` / `"SRO"` / `"Internal"` |
 | `doc_type` | string | `"regulation"` / `"rule"` / `"guidance"` / `"enforcement"` / `"internal"` / `"operational"` |
 | `effective_date` | string | `"2020-06-30"` |
@@ -102,7 +103,9 @@ overlap between adjacent chunks.
 
 **ID format:**
 - Regulatory: `${citationId}::${paragraphPath}::p${N}` (e.g. `FINRA-Rule-5310::.09::p0`).
-- Fallback: `${citationId}::chunk_${globalIndex}` (unchanged).
+- Fallback: `${citationId}::${headingSlug}` for single-chunk sections, `${citationId}::${headingSlug}::p${N}` when a section overflows the token budget. Example: `Kestrel-WSP-Equities::supervisory-hierarchy`, `Kestrel-Best-Execution-Policy::overview::p0`.
+  - Slug charset: `[a-z0-9.-]`. Derived from the full heading path (e.g. `"Supervision > (c) Cycles"` → `"supervision-c-cycles"`).
+  - Collision handling: if two sections in the same doc produce the same slug, the second gets `-2`, the third `-3`, etc.
 
 Both formats are stable across re-runs, enabling idempotent upserts.
 

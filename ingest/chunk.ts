@@ -10,8 +10,10 @@
  *    `${citationId}::${paragraphPath}::p${N}`.
  *
  *  - **Fallback mode** (everything else, including `Kestrel` and `FinCEN`):
- *    the original H1/H2/H3 + sentence-packing logic. Chunk IDs remain
- *    `${citationId}::chunk_${N}`.
+ *    the original H1/H2/H3 + sentence-packing logic. Chunk IDs use a
+ *    heading-slug suffix: `${citationId}::${slugifyHeadingPath(headingPath)}`.
+ *    If a heading scope produces multiple token-cap chunks, appends `::p0`,
+ *    `::p1`, etc. Collisions within a doc get `-2`, `-3`, … suffixes.
  *
  * Shared behaviour across modes:
  *  - Target ~500 tokens (~375 words) per chunk, with ~50-token (~38-word)
@@ -105,6 +107,29 @@ function packSentencesIntoChunks(sentences: string[]): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Heading-slug helper (used by fallback mode)
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert a heading path like
+ *   "Supervision > (c) Internal inspections > (1) Inspection cycles"
+ * into a kebab-case slug using charset [a-z0-9.-].
+ *
+ * Strategy: lowercase, collapse punctuation/whitespace runs into hyphens,
+ * strip leading/trailing hyphens, limit run of consecutive hyphens to one.
+ */
+function slugifyHeadingPath(path: string): string {
+  return path
+    .toLowerCase()
+    // Replace any run of non-alphanumeric, non-dot characters with a hyphen.
+    .replace(/[^a-z0-9.]+/g, "-")
+    // Collapse multiple consecutive hyphens.
+    .replace(/-{2,}/g, "-")
+    // Strip leading/trailing hyphens.
+    .replace(/^-+|-+$/g, "");
+}
+
+// ---------------------------------------------------------------------------
 // Fallback mode: H1/H2/H3 + sentence-packing (Kestrel, FinCEN, unknown)
 // ---------------------------------------------------------------------------
 
@@ -161,12 +186,33 @@ function chunkFallback(
   const chunks: Chunk[] = [];
   let globalIndex = 0;
 
+  // Per-doc collision tracking: slug → count of times already used.
+  const slugCounts = new Map<string, number>();
+
+  /**
+   * Resolve the de-duplicated slug for a given heading path.
+   * First use: return the raw slug unchanged.
+   * Subsequent uses: append -2, -3, … in emission order.
+   */
+  function resolveSlug(headingPath: string): string {
+    const raw = headingPath.length > 0 ? slugifyHeadingPath(headingPath) : "section";
+    const count = slugCounts.get(raw) ?? 0;
+    slugCounts.set(raw, count + 1);
+    return count === 0 ? raw : `${raw}-${count + 1}`;
+  }
+
   for (const section of sections) {
     if (section.body.trim().length === 0) continue;
 
     const sentences = splitSentences(section.body);
     const packedChunks = packSentencesIntoChunks(sentences);
 
+    // Resolve the slug once per section (so all chunks in the same heading
+    // scope share the same base slug, disambiguated by ::p0, ::p1, …).
+    const slug = resolveSlug(section.headingPath);
+    const multiChunk = packedChunks.filter((t) => t.trim().length > 0).length > 1;
+
+    let sectionChunkIndex = 0;
     for (const chunkText of packedChunks) {
       if (chunkText.trim().length === 0) continue;
 
@@ -177,17 +223,20 @@ function chunkFallback(
         chunkIndex: globalIndex,
       };
 
-      chunks.push({
-        id: `${metadata.citationId}::chunk_${globalIndex}`,
-        text: chunkText,
-        metadata: chunkMetadata,
-      });
+      // Overflow: if the section splits into multiple chunks, append ::p0, ::p1, …
+      const id = multiChunk
+        ? `${metadata.citationId}::${slug}::p${sectionChunkIndex}`
+        : `${metadata.citationId}::${slug}`;
+
+      chunks.push({ id, text: chunkText, metadata: chunkMetadata });
 
       globalIndex++;
+      sectionChunkIndex++;
     }
   }
 
   if (chunks.length === 0 && body.trim().length > 0) {
+    const slug = slugifyHeadingPath("section");
     const chunkMetadata: ChunkMetadata = {
       ...metadata,
       headingPath: "",
@@ -195,7 +244,7 @@ function chunkFallback(
       chunkIndex: 0,
     };
     chunks.push({
-      id: `${metadata.citationId}::chunk_0`,
+      id: `${metadata.citationId}::${slug}`,
       text: body.trim(),
       metadata: chunkMetadata,
     });
