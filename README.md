@@ -50,6 +50,17 @@ pnpm build       # production build
 pnpm format      # prettier --write .
 ```
 
+## Evaluation
+
+`pnpm eval` runs the pilot benchmark (`eval/benchmarks/pilot.yaml`) — 10
+hand-labeled queries against the live Kestrel v2 corpus — through the same
+compiled graph the app uses, computes `pinpoint_precision@5` per item plus
+the overall mean, and writes a markdown report to
+`eval/results/<date>-<sha>.md` (also printed to stdout). The pilot is
+deliberately small; faithfulness, refusal, and CI gating land in the
+follow-up tickets E1–E5. See [`eval-plan.md`](./eval-plan.md) for the wider
+roadmap.
+
 ## Folder layout
 
 See [`plan.md` § Folders](./plan.md) for the full planned structure. The current skeleton is:

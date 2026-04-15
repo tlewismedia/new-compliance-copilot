@@ -1,0 +1,63 @@
+# Eval pilot benchmark — 10 hand-labeled queries against the Kestrel v2 corpus.
+#
+# Each item: { query, expected_chunk_ids[], notes }.
+# Chunk-ID format derived directly from ingest/chunk.ts:
+#   - Regulatory pinpoint: ${citation_id}::${paragraph_path}::p${N}
+#   - Internal / fallback: ${citation_id}::chunk_${N}
+#
+# IDs were resolved by running the chunker over corpus/*.md and matching by
+# heading_path + chunk text. See eval-pilot-plan.md / eval-plan.md for the
+# wider story.
+
+- query: "What does FINRA Rule 5310.09 require for the best-execution review of fixed income securities?"
+  expected_chunk_ids:
+    - "FINRA-Rule-5310::.09::p0"
+  notes: "Pinpoint lookup — FINRA Supplementary Material .09 (fixed-income best execution). Tests citation-aware chunker output."
+
+- query: "What pre-trade financial risk management controls does SEC Rule 15c3-5 require for broker-dealers with market access?"
+  expected_chunk_ids:
+    - "17 CFR 240.17a-3, 240.17a-4, 240.15c3-5::chunk_20"
+  notes: "Pinpoint lookup — Rule 15c3-5(c)(1) financial controls. Chunker emits chunk_20 because the (c)(1) header sits inside an already-open (c) frame, so it falls into fallback indexing within that frame."
+
+- query: "What is the Care Obligation under Regulation Best Interest (17 CFR 240.15l-1)?"
+  expected_chunk_ids:
+    - "17 CFR 240.15l-1::(a)(2)::p0"
+  notes: "Pinpoint lookup — Reg BI care obligation at (a)(2)."
+
+- query: "What does Reg SHO Rule 204 require for closing out fail-to-deliver positions?"
+  expected_chunk_ids:
+    - "17 CFR 242.200-204::(a)::p0"
+  notes: "Pinpoint lookup — Rule 204(a) close-out requirement. Note: the corpus document concatenates §§ 242.200–204 under one citation_id, so paragraph_path '(a)' appears multiple times across the doc; the close-out chunk is the one whose heading_path roots in '§ 242.204 — Close-out requirement.'"
+
+- query: "What does the Advisers Act Marketing Rule (Rule 206(4)-1) require for testimonials and endorsements?"
+  expected_chunk_ids:
+    - "17 CFR 275.206(4)-1 and 275.206(4)-2::(b)::p0"
+  notes: "Pinpoint lookup — Marketing Rule (b) testimonials and endorsements."
+
+- query: "Under Kestrel's WSP for the equities desk, who is responsible for supervising the trading desk personnel?"
+  expected_chunk_ids:
+    - "Kestrel-WSP-Equities::chunk_2"
+  notes: "Doc-level — supervisory hierarchy section of Kestrel WSP."
+
+- query: "How often does Kestrel's best-execution policy require a regular and rigorous review?"
+  expected_chunk_ids:
+    - "Kestrel-Best-Execution-Policy::chunk_4"
+    - "Kestrel-Best-Execution-Policy::chunk_5"
+  notes: "Doc-level — committee cadence (chunk_4) and review scope/quarterly cadence (chunk_5)."
+
+- query: "What were the two findings in the 2025 FINRA exam exit letter for Kestrel?"
+  expected_chunk_ids:
+    - "Kestrel-FINRA-Exam-Letter-2025::chunk_3"
+    - "Kestrel-FINRA-Exam-Letter-2025::chunk_7"
+  notes: "Doc-level — Finding 1 (Rule 5310 regular and rigorous review) and Finding 2 (Rule 3110 email supervision sampling)."
+
+- query: "What triggers Kestrel's AML program to file a Suspicious Activity Report (SAR)?"
+  expected_chunk_ids:
+    - "Kestrel-AML-Program::chunk_13"
+  notes: "Doc-level — section 5.3 SAR-SF filing criteria."
+
+- query: "What violation is described in the FINRA AWC enforcement matter for best-execution failures?"
+  expected_chunk_ids:
+    - "FINRA-AWC-2023056789201::chunk_5"
+    - "FINRA-AWC-2023056789201::chunk_6"
+  notes: "Doc-level — overview of the conduct and Rule 5310 best-execution facts."
