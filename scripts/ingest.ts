@@ -106,14 +106,33 @@ async function main(): Promise<void> {
         continue;
       }
 
-      const baseMetadata: Omit<ChunkMetadata, "headingPath" | "chunkIndex"> = {
+      const rawTopicTags = frontMatter["topic_tags"];
+      const topicTags: readonly string[] = Array.isArray(rawTopicTags)
+        ? rawTopicTags.map((t) => String(t))
+        : [];
+
+      const baseMetadata: Omit<
+        ChunkMetadata,
+        "headingPath" | "chunkIndex" | "paragraphPath"
+      > = {
         title: String(frontMatter["title"]),
         source: String(frontMatter["source"]),
+        authority: String(
+          frontMatter["authority"] ?? "Kestrel"
+        ) as ChunkMetadata["authority"],
         citationId: String(frontMatter["citation_id"]),
-        jurisdiction: String(frontMatter["jurisdiction"]),
-        docType: String(frontMatter["doc_type"]),
+        jurisdiction: String(
+          frontMatter["jurisdiction"]
+        ) as ChunkMetadata["jurisdiction"],
+        docType: String(
+          frontMatter["doc_type"]
+        ) as ChunkMetadata["docType"],
         effectiveDate: String(frontMatter["effective_date"]),
         sourceUrl: String(frontMatter["source_url"]),
+        versionStatus: String(
+          frontMatter["version_status"] ?? "current"
+        ) as ChunkMetadata["versionStatus"],
+        topicTags,
       };
 
       const chunks = chunkDocument(markdownBody, baseMetadata);

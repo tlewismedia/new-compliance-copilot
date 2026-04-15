@@ -15,15 +15,25 @@ export function createRetrieveNode(
 
     const retrievals: Retrieval[] = response.result.hits.map((hit) => {
       const f = hit.fields as Record<string, unknown>;
+      const rawTags = f["topic_tags"];
+      const topicTags: readonly string[] = Array.isArray(rawTags)
+        ? rawTags.map((t) => String(t))
+        : [];
       const metadata: ChunkMetadata = {
         title: str(f, "title"),
         source: str(f, "source"),
+        authority: (str(f, "authority") ||
+          "Kestrel") as ChunkMetadata["authority"],
         citationId: str(f, "citation_id"),
-        jurisdiction: str(f, "jurisdiction"),
-        docType: str(f, "doc_type"),
+        jurisdiction: str(f, "jurisdiction") as ChunkMetadata["jurisdiction"],
+        docType: str(f, "doc_type") as ChunkMetadata["docType"],
         effectiveDate: str(f, "effective_date"),
         sourceUrl: str(f, "source_url"),
+        versionStatus: (str(f, "version_status") ||
+          "current") as ChunkMetadata["versionStatus"],
+        topicTags,
         headingPath: str(f, "heading_path"),
+        paragraphPath: str(f, "paragraph_path"),
         chunkIndex: Number(f["chunk_index"] ?? 0),
       };
       return {

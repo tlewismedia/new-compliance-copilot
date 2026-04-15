@@ -195,7 +195,7 @@ function packSentencesIntoChunks(sentences: string[]): string[] {
  */
 export function chunkDocument(
   body: string,
-  metadata: Omit<ChunkMetadata, "headingPath" | "chunkIndex">
+  metadata: Omit<ChunkMetadata, "headingPath" | "chunkIndex" | "paragraphPath">
 ): Chunk[] {
   const sections = parseSections(body);
   const chunks: Chunk[] = [];
@@ -213,6 +213,7 @@ export function chunkDocument(
       const chunkMetadata: ChunkMetadata = {
         ...metadata,
         headingPath: section.headingPath,
+        paragraphPath: "",
         chunkIndex: globalIndex,
       };
 
@@ -232,6 +233,7 @@ export function chunkDocument(
     const chunkMetadata: ChunkMetadata = {
       ...metadata,
       headingPath: "",
+      paragraphPath: "",
       chunkIndex: 0,
     };
     chunks.push({

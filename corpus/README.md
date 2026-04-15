@@ -1,75 +1,98 @@
-# Sample Corpus
+# Corpus — Kestrel Securities (v2)
 
-Seed markdown excerpts used by the ingestion pipeline (`ingest/` + `scripts/ingest.ts`,
-landing in Part 2 / M1). Each file is a short excerpt — **2–10 KB** — with YAML
-front-matter carrying provenance metadata so the chunker and the downstream
-retriever can preserve citations end-to-end.
+## Scenario
 
-No chunking, embedding, or Pinecone logic lives here — that's Issue B. This
-directory is purely content.
+The corpus is organized around **Kestrel Securities**, a fictional
+institution chosen to give the Copilot a coherent regulatory surface. A
+RAG assistant is only as good as its ground truth, and a grab-bag corpus
+produces grab-bag answers.
 
-## Front-matter schema
+**Kestrel Securities, LLC** — self-clearing FINRA-member broker-dealer,
+SEC registrant. ~180,000 retail accounts, ~400 employees, ~$2.5B customer
+assets. Equities, listed options, light fixed-income. Retail NMS flow
+routes to two wholesale market makers under PFOF arrangements. Self-
+clearing posture puts Kestrel directly under the SEC net-capital,
+customer-protection, and books-and-records rules.
 
-Every `.md` file in this directory begins with a YAML front-matter block using
-exactly these fields:
+**Kestrel Advisors, LLC** — dually-registered SEC investment adviser,
+wholly-owned subsidiary, ~$500M AUM across model-portfolio wealth
+management; uses Kestrel Securities for client brokerage execution.
+
+**Supervisory posture.** Two open 2026 exam findings: FINRA on the depth
+and documentation of the broker-dealer's Rule 5310 regular-and-rigorous
+review (with attention to the PFOF relationships); SEC on the adviser's
+Rule 206(4)-2 surprise-exam timing irregularity. These animate the
+`Compliance notes for Kestrel` sections scattered through the docset.
+
+## Front-matter v2 schema
 
 ```yaml
 ---
-title: <string>                # Human-readable title of the excerpt.
-source: <string>               # Publisher bucket: "FFIEC", "CFPB", "OCC", "SEC", or "Internal".
-citation_id: <string>          # Stable citation identifier, e.g. "12 CFR 1026.18".
-jurisdiction: <string>         # "US-Federal" or "Internal".
-doc_type: regulation | guidance | internal
-effective_date: <YYYY-MM-DD>   # Use "n/a" only if the document is undated internal material.
-source_url: <string>           # Canonical public URL (.gov) for regulatory docs; internal:// scheme for synthetic internal policy.
-retrieved_at: <YYYY-MM-DD>     # Date the excerpt was copied into this repo.
+title: string
+authority: "SEC" | "FINRA" | "MSRB" | "FinCEN" | "Kestrel"
+source: string
+citation_id: string
+jurisdiction: "US-Federal" | "SRO" | "Internal"
+doc_type: "regulation" | "rule" | "guidance" | "enforcement" | "internal" | "operational"
+effective_date: string           # YYYY-MM-DD or "n/a"
+sunset_date: string              # YYYY-MM-DD or "n/a"
+version_status: "current" | "proposed" | "superseded"
+supersedes: string               # citation_id of older doc, or "n/a"
+source_url: string
+retrieved_at: string             # YYYY-MM-DD
+topic_tags: [string]             # kebab-case, 3–6 per doc
 ---
 ```
 
-Validation is performed at ingest time via `gray-matter` (added as a dependency
-in Issue B).
+Validation runs at ingest; missing fields produce `status: "skipped"`.
 
-## Documents
+## Document inventory — external regulatory documents
 
-| File                                 | Source   | Citation ID                     | Doc type   | Effective date | Retrieved   |
-| ------------------------------------ | -------- | ------------------------------- | ---------- | -------------- | ----------- |
-| `ffiec-cat-domain-5.md`              | FFIEC    | FFIEC-CAT-Domain-5              | guidance   | 2017-05-31     | 2026-04-14  |
-| `cfpb-reg-z-1026-18.md`              | CFPB     | 12 CFR 1026.18                  | regulation | 2011-12-30     | 2026-04-14  |
-| `occ-bulletin-2013-29.md`            | OCC      | OCC-Bulletin-2013-29            | guidance   | 2013-10-30     | 2026-04-14  |
-| `sec-marketing-rule-206-4-1.md`      | SEC      | SEC-IA-Marketing-Rule-206(4)-1  | regulation | 2021-05-04     | 2026-04-14  |
-| `acme-bank-complaint-handling.md`    | Internal | ACME-POL-CCH-004                | internal   | 2024-01-15     | 2026-04-14  |
+| File | Authority | Citation ID | Doc type | Version | Supersedes |
+|---|---|---|---|---|---|
+| `reg-bi-form-crs.md` | SEC | 17 CFR 240.15l-1 | regulation | current | n/a |
+| `finra-5310-best-execution.md` | FINRA | FINRA-Rule-5310 | rule | current | n/a |
+| `sec-rule-605-606-order-routing.md` | SEC | 17 CFR 242.605-606 | regulation | current | n/a |
+| `proposed-reg-best-execution.md` | SEC | SEC-Release-34-96496 | regulation | **proposed** | n/a |
+| `reg-sho.md` | SEC | 17 CFR 242.200-204 | regulation | current | n/a |
+| `finra-3110-3130-supervision.md` | FINRA | FINRA-Rule-3110-3130 | rule | current | n/a |
+| `sec-net-capital-customer-protection.md` | SEC | 17 CFR 240.15c3-1, 240.15c3-3 | regulation | current | n/a |
+| `sec-books-records-market-access.md` | SEC | 17 CFR 240.17a-3, 240.17a-4, 240.15c3-5 | regulation | current | n/a |
+| `advisers-act-antifraud-code-of-ethics.md` | SEC | 15 USC 80b-6 / 17 CFR 275.204A-1 | regulation | current | n/a |
+| `advisers-act-marketing-custody.md` | SEC | 17 CFR 275.206(4)-1 and 275.206(4)-2 | regulation | current | **17 CFR 275.206(4)-3** |
+| `bsa-aml-broker-dealer.md` | FinCEN | 31 CFR Part 1023 | regulation | current | n/a |
+| `enforcement-finra-awc-best-ex.md` | FINRA | FINRA-AWC-2023056789201 | enforcement | current | n/a |
 
-Source buckets covered: **FFIEC**, **CFPB / Regulation Z**, **OCC**, **SEC**,
-**Internal (synthetic)** — one document per bucket, satisfying the source-variety
-requirement from `plan-part-2.md` § Issue A.
+Internal (Kestrel-synthesized) documents ship in Issue B.
 
-## Source URLs
+## Coverage
 
-- FFIEC CAT: https://www.ffiec.gov/pdf/cybersecurity/FFIEC_CAT_May_2017.pdf
-- CFPB Reg Z § 1026.18: https://www.ecfr.gov/current/title-12/chapter-X/part-1026/subpart-C/section-1026.18
-- OCC Bulletin 2013-29: https://www.occ.gov/news-issuances/bulletins/2013/bulletin-2013-29.html
-- SEC Marketing Rule 17 CFR 275.206(4)-1: https://www.ecfr.gov/current/title-17/chapter-II/part-275/section-275.206(4)-1
-- Acme Bank Complaint Handling Procedure: `internal://acme-bank/policies/complaint-handling` (synthetic)
+- `version_status: "proposed"` → `proposed-reg-best-execution.md`.
+- Non-`"n/a"` `supersedes` → `advisers-act-marketing-custody.md` supersedes
+  the rescinded cash-solicitation rule 17 CFR 275.206(4)-3.
+- `doc_type: "enforcement"` → `enforcement-finra-awc-best-ex.md`.
 
 ## Licensing
 
-Public-domain US federal guidance / synthetic internal sample — no
-redistribution concerns.
+Federal regulatory text (17 CFR, 31 CFR, 15 U.S.C.) is a U.S. Government
+work and not subject to copyright under 17 U.S.C. § 105. SRO rules from
+the FINRA Manual are publicly disseminated; excerpts here are used for
+non-commercial regulatory research and every document carries a
+`source_url` resolving to the canonical page and a `retrieved_at` date.
 
-The four regulatory excerpts are drawn from works of the United States
-Government published on official `.gov` sources and are not subject to
-copyright under 17 U.S.C. § 105. The internal policy (`acme-bank-*`) is
-fictional content written for this project and does not reproduce any real
-institution's material.
+The `enforcement-finra-awc-best-ex.md` document is a hypothetical
+reconstruction representative of the AWCs published in FINRA's
+Disciplinary Actions database and is labeled as such inside the file.
 
-## Adding new documents
+## Adding a new document
 
-1. Copy a short (2–10 KB) excerpt from a public federal source, or write
-   synthetic internal content.
-2. Prepend the front-matter block above with every field populated.
-3. Use a filename that encodes source and citation, e.g.
-   `cfpb-reg-e-1005-11.md`.
-4. Update the table in this README.
-5. Verify byte size with `wc -c corpus/your-file.md` — it must be under 10240
-   bytes.
-6. Verify front-matter parses cleanly with `gray-matter`.
+1. Pick a canonical public source (`.gov` or `.finra.org`).
+2. Prepend the front-matter v2 block above with every required field.
+3. Use a filename that encodes the topic (e.g.
+   `sec-rule-611-order-protection.md`).
+4. Add a row to the inventory table.
+5. Verify front-matter parses cleanly with `gray-matter`.
+6. Keep documents under ~60 KB.
+
+Previous (v1) documents are retained for reference under
+`corpus/archive/v1/` and are not ingested.
