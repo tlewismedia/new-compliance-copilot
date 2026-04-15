@@ -63,7 +63,7 @@ A two-node LangGraph `StateGraph` (`retrieve → generate`) behind a Next.js rou
 ├── pipeline/
 │   ├── nodes/
 │   │   ├── retrieve.ts     # vector search → partial GraphState
-│   │   └── generate.ts     # Anthropic call → partial GraphState
+│   │   └── generate.ts     # OpenAI call → partial GraphState
 │   ├── state.ts            # GraphState annotation + reducers
 │   └── graph.ts            # StateGraph wiring: retrieve → generate
 ├── ingest/
@@ -144,10 +144,10 @@ Each milestone is a releasable increment. Don't start the next one until the pre
 ### M2 — RAG pipeline (LangGraph `StateGraph`)
 - `GraphState` annotation in `pipeline/state.ts` with an array reducer for `retrievals`.
 - `retrieve` node: vector search against Pinecone → `{ retrievals }`.
-- `generate` node: Anthropic call with grounded system prompt (inline `[^N]` citations, refuse to fabricate) → `{ answer }`.
+- `generate` node: OpenAI call with grounded system prompt (inline `[^N]` citations, refuse to fabricate) → `{ answer }`.
 - Compiled graph in `pipeline/graph.ts`: `START → retrieve → generate → END`.
 - `/api/query` route calls `graph.invoke({ query })` and returns the final state.
-- Test: unit tests per node with a fake vector store and a stubbed LLM; one integration test against real Pinecone + Anthropic (skippable without creds).
+- Test: unit tests per node with a fake vector store and a stubbed LLM; one integration test against real Pinecone + OpenAI (skippable without creds).
 
 ### M3 — Minimal UI
 - Single page: query input, submit button, answer panel, sources panel.

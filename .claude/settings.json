@@ -1,26 +1,3 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // empty'); [ -z \"$f\" ] && exit 0; [ -f package.json ] || exit 0; case \"$f\" in *.ts|*.tsx|*.js|*.jsx|*.json|*.md) pnpm exec prettier --write --log-level=error \"$f\" 2>/dev/null || true ;; esac; exit 0"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -f package.json ] || exit 0; out=$(pnpm -s typecheck 2>&1); tc=$?; out2=$(pnpm -s lint 2>&1); ln=$?; if [ $tc -ne 0 ] || [ $ln -ne 0 ]; then echo \"Type or lint errors remain. Fix before declaring the task done.\" >&2; [ $tc -ne 0 ] && echo \"--- typecheck ---\" >&2 && echo \"$out\" | tail -40 >&2; [ $ln -ne 0 ] && echo \"--- lint ---\" >&2 && echo \"$out2\" | tail -40 >&2; exit 2; fi; exit 0"
-          }
-        ]
-      }
-    ]
-  }
+  "$schema": "https://json.schemastore.org/claude-code-settings.json"
 }

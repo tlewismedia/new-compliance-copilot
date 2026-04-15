@@ -8,25 +8,40 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "ingest": "tsx scripts/ingest.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "next build && playwright test",
+    "e2e:start": "next start"
   },
   "dependencies": {
+    "@langchain/core": "^1.1.39",
+    "@langchain/langgraph": "^1.2.8",
+    "@pinecone-database/pinecone": "^7.2.0",
+    "gray-matter": "^4.0.3",
     "next": "16.2.3",
+    "openai": "^6.0.0",
     "react": "19.2.5",
     "react-dom": "19.2.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@types/node": "^22.0.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.4.2",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.2.3",
     "eslint-config-prettier": "^9.1.0",
     "postcss": "^8.4.49",
     "prettier": "^3.3.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.9.0"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.4"
   },
   "packageManager": "pnpm@10.33.0"
 }
