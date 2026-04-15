@@ -1,13 +1,23 @@
 /**
- * Markdown-aware chunker.
+ * Markdown-aware chunker with regulatory paragraph-path awareness.
  *
- * Strategy:
- * 1. Split on H1/H2/H3 header boundaries.
- * 2. Carry the full heading path for each section.
- * 3. Pack sub-sections into chunks of ~500 tokens (~375 words) with ~50-token
- *    (~38-word) overlap.
- * 4. Never split mid-citation (e.g. `12 CFR 1026.18`) or mid-sentence.
- * 5. Token heuristic: 1 token ≈ 0.75 words  ↔  N tokens ≈ N * 0.75 words.
+ * Two modes, dispatched on the front-matter `authority`:
+ *
+ *  - **Regulatory mode** (`authority ∈ {SEC, FINRA, MSRB}`): the chunker
+ *    recognises paragraph markers in the body — (a), (1), (i) for CFR-style
+ *    regulations and .01-.99 for FINRA Supplementary Material — and emits
+ *    one chunk per terminal paragraph. Chunk IDs are
+ *    `${citationId}::${paragraphPath}::p${N}`.
+ *
+ *  - **Fallback mode** (everything else, including `Kestrel` and `FinCEN`):
+ *    the original H1/H2/H3 + sentence-packing logic. Chunk IDs remain
+ *    `${citationId}::chunk_${N}`.
+ *
+ * Shared behaviour across modes:
+ *  - Target ~500 tokens (~375 words) per chunk, with ~50-token (~38-word)
+ *    overlap between adjacent chunks within the same leaf.
+ *  - Never split mid-sentence or mid-citation (e.g. `12 CFR 1026.18`).
+ *  - Token heuristic: 1 token ≈ 0.75 words.
  */
 
 import type { Chunk, ChunkMetadata } from "../shared/types";
@@ -18,35 +28,21 @@ import type { Chunk, ChunkMetadata } from "../shared/types";
 
 const TARGET_TOKENS = 500;
 const OVERLAP_TOKENS = 50;
-// 1 token ≈ 0.75 words  ⟹  word budget = token budget × 0.75
 const WORDS_PER_TOKEN = 0.75;
 const TARGET_WORDS = Math.round(TARGET_TOKENS * WORDS_PER_TOKEN); // ~375
 const OVERLAP_WORDS = Math.round(OVERLAP_TOKENS * WORDS_PER_TOKEN); // ~38
 
-// Regex matching H1 / H2 / H3 lines (including the newline that follows).
-const HEADER_RE = /^(#{1,3})\s+(.+)$/m;
+const HEADER_RE = /^(#{1,3})\s+(.+)$/;
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Sentence-level helpers (shared across modes)
 // ---------------------------------------------------------------------------
 
-/** Rough word count. */
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-/**
- * Split `text` into sentences while preserving citation strings such as
- * `12 CFR 1026.18`.  A citation is any token matching the pattern
- * `NN+ [A-Z]+ NNN+` (e.g. "12 CFR 1026.18", "15 U.S.C. 1601").
- *
- * The split is performed on `. `, `! `, `? ` that are NOT preceded by a
- * citation-like sequence.
- */
 function splitSentences(text: string): string[] {
-  // We split on sentence-ending punctuation followed by whitespace, but we
-  // must not split inside a citation such as "12 CFR 1026.18" or "15 U.S.C."
-  // Strategy: walk character-by-character and find safe split points.
   const sentences: string[] = [];
   let start = 0;
 
@@ -55,15 +51,11 @@ function splitSentences(text: string): string[] {
     if ((ch === "." || ch === "!" || ch === "?") && i + 1 < text.length) {
       const next = text[i + 1];
       if (next === " " || next === "\n") {
-        // Check if this period is part of a citation / abbreviation.
-        // Look back for a digit immediately before the dot.
         const prevChar = i > 0 ? text[i - 1] : "";
         const isCitationDot = /\d/.test(prevChar);
-        // Also guard abbreviations like "U.S.C." — uppercase letter before dot.
         const isAbbrev = /[A-Z]/.test(prevChar);
         if (!isCitationDot && !isAbbrev) {
           sentences.push(text.slice(start, i + 1).trim());
-          // Skip the whitespace(s) after the punctuation.
           while (i + 1 < text.length && /\s/.test(text[i + 1])) i++;
           start = i + 1;
         }
@@ -75,73 +67,6 @@ function splitSentences(text: string): string[] {
   return sentences.filter((s) => s.length > 0);
 }
 
-// ---------------------------------------------------------------------------
-// Section parsing
-// ---------------------------------------------------------------------------
-
-interface Section {
-  headingPath: string;
-  body: string;
-}
-
-/**
- * Parse the markdown `body` into sections delimited by H1/H2/H3 headers.
- * Each section carries its full heading path, e.g.
- *   "Domain 5 > Incident Resilience Planning and Strategy > Testing"
- */
-function parseSections(body: string): Section[] {
-  // Split on lines that start with 1-3 `#` characters.
-  const lines = body.split("\n");
-  const sections: Section[] = [];
-
-  // Track the heading hierarchy: index 0 = H1, 1 = H2, 2 = H3.
-  const headingStack: string[] = ["", "", ""];
-
-  let currentHeadingPath = "";
-  let currentBodyLines: string[] = [];
-
-  function flush() {
-    const text = currentBodyLines.join("\n").trim();
-    if (text.length > 0 || sections.length === 0) {
-      sections.push({ headingPath: currentHeadingPath, body: text });
-    }
-    currentBodyLines = [];
-  }
-
-  for (const line of lines) {
-    const match = HEADER_RE.exec(line);
-    if (match) {
-      flush();
-      const level = match[1].length; // 1, 2, or 3
-      const title = match[2].trim();
-
-      // Update heading stack.
-      headingStack[level - 1] = title;
-      // Clear deeper levels.
-      for (let d = level; d < headingStack.length; d++) {
-        headingStack[d] = "";
-      }
-
-      currentHeadingPath = headingStack
-        .filter((h) => h.length > 0)
-        .join(" > ");
-    } else {
-      currentBodyLines.push(line);
-    }
-  }
-  flush();
-
-  return sections;
-}
-
-// ---------------------------------------------------------------------------
-// Packing sections into chunks
-// ---------------------------------------------------------------------------
-
-/**
- * Given a list of sentences, produce chunks respecting the word budget with
- * overlap.  Never splits mid-sentence.
- */
 function packSentencesIntoChunks(sentences: string[]): string[] {
   if (sentences.length === 0) return [];
 
@@ -153,11 +78,8 @@ function packSentencesIntoChunks(sentences: string[]): string[] {
     const sw = wordCount(sentence);
 
     if (currentWords + sw > TARGET_WORDS && currentSentences.length > 0) {
-      // Emit the current chunk.
       chunks.push(currentSentences.join(" "));
 
-      // Build the overlap: keep sentences from the end of the current chunk
-      // until we have ~OVERLAP_WORDS worth.
       const overlapSentences: string[] = [];
       let overlapWords = 0;
       for (let i = currentSentences.length - 1; i >= 0; i--) {
@@ -183,17 +105,55 @@ function packSentencesIntoChunks(sentences: string[]): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Fallback mode: H1/H2/H3 + sentence-packing (Kestrel, FinCEN, unknown)
 // ---------------------------------------------------------------------------
 
-/**
- * Chunk a markdown document body into `Chunk[]` records.
- *
- * @param body     - The markdown body (after front-matter has been stripped).
- * @param metadata - The base metadata for this document (from front-matter).
- *                   `headingPath` and `chunkIndex` will be overwritten per chunk.
- */
-export function chunkDocument(
+interface Section {
+  headingPath: string;
+  body: string;
+}
+
+function parseSections(body: string): Section[] {
+  const lines = body.split("\n");
+  const sections: Section[] = [];
+  const headingStack: string[] = ["", "", ""];
+
+  let currentHeadingPath = "";
+  let currentBodyLines: string[] = [];
+
+  function flush() {
+    const text = currentBodyLines.join("\n").trim();
+    if (text.length > 0 || sections.length === 0) {
+      sections.push({ headingPath: currentHeadingPath, body: text });
+    }
+    currentBodyLines = [];
+  }
+
+  for (const line of lines) {
+    const match = HEADER_RE.exec(line);
+    if (match) {
+      flush();
+      const level = match[1].length;
+      const title = match[2].trim();
+
+      headingStack[level - 1] = title;
+      for (let d = level; d < headingStack.length; d++) {
+        headingStack[d] = "";
+      }
+
+      currentHeadingPath = headingStack
+        .filter((h) => h.length > 0)
+        .join(" > ");
+    } else {
+      currentBodyLines.push(line);
+    }
+  }
+  flush();
+
+  return sections;
+}
+
+function chunkFallback(
   body: string,
   metadata: Omit<ChunkMetadata, "headingPath" | "chunkIndex" | "paragraphPath">
 ): Chunk[] {
@@ -227,8 +187,6 @@ export function chunkDocument(
     }
   }
 
-  // If nothing was produced (e.g. body had no text in any section), fall back
-  // to treating the whole body as one chunk.
   if (chunks.length === 0 && body.trim().length > 0) {
     const chunkMetadata: ChunkMetadata = {
       ...metadata,
@@ -244,4 +202,275 @@ export function chunkDocument(
   }
 
   return chunks;
+}
+
+// ---------------------------------------------------------------------------
+// Regulatory mode: paragraph-marker detection
+// ---------------------------------------------------------------------------
+
+interface ParagraphMarker {
+  level: number;
+  marker: string;
+}
+
+type MarkerMatcher = (
+  line: string,
+  stack: readonly ParagraphMarker[]
+) => ParagraphMarker | null;
+
+// Single-char letters that are also valid Roman numerals (lowercase).
+// At the top level of an SEC/MSRB paragraph stack these read as letters
+// (e.g. `(i)` as a top-level paragraph). Inside a deeper numbered paragraph
+// they read as Roman numerals.
+const AMBIGUOUS_ROMAN_LETTER = /^[ivxlc]$/;
+
+// Strip Markdown leaders that commonly precede a paragraph marker: header
+// hashes, bullet points, numbered-list leaders, and any trailing whitespace.
+function stripLeaders(line: string): string {
+  return line.replace(/^(?:#{1,6}\s+|[-*]\s+|\d+\.\s+)/, "").trimStart();
+}
+
+// Prefer the Roman-numeral interpretation of an ambiguous single-char
+// letter (i, v, x, l, c) when the paragraph stack is already inside a
+// numbered sub-paragraph — the CFR convention is (a) → (1) → (i).
+function preferRomanHere(stack: readonly ParagraphMarker[]): boolean {
+  return stack.some((m) => m.level === 1);
+}
+
+function matchSecMarker(
+  line: string,
+  stack: readonly ParagraphMarker[]
+): ParagraphMarker | null {
+  const s = stripLeaders(line);
+
+  // Multi-char Roman (ii, iii, iv, vi, ix, …) is unambiguous.
+  let m = s.match(/^\(([ivxlc]{2,})\)(?=\s|$|\.)/);
+  if (m) return { level: 2, marker: `(${m[1]})` };
+
+  // Single-letter marker: ambiguous iff the letter is itself a valid
+  // Roman-numeral symbol. Resolve by stack context.
+  m = s.match(/^\(([a-z])\)(?=\s|$|\.)/);
+  if (m) {
+    const letter = m[1];
+    if (AMBIGUOUS_ROMAN_LETTER.test(letter) && preferRomanHere(stack)) {
+      return { level: 2, marker: `(${letter})` };
+    }
+    return { level: 0, marker: `(${letter})` };
+  }
+
+  m = s.match(/^\((\d+)\)(?=\s|$|\.)/);
+  if (m) return { level: 1, marker: `(${m[1]})` };
+  return null;
+}
+
+function matchFinraMarker(line: string): ParagraphMarker | null {
+  const s = stripLeaders(line);
+  const m = s.match(/^\.(\d{2})(?=\s|$)/);
+  if (m) return { level: 0, marker: `.${m[1]}` };
+  return null;
+}
+
+function matchMsrbMarker(
+  line: string,
+  stack: readonly ParagraphMarker[]
+): ParagraphMarker | null {
+  const s = stripLeaders(line);
+
+  // Multi-char Roman is unambiguous.
+  let m = s.match(/^\(([ivxlc]{2,})\)(?=\s|$|\.)/);
+  if (m) return { level: 1, marker: `(${m[1]})` };
+
+  m = s.match(/^\(([a-z])\)(?=\s|$|\.)/);
+  if (m) {
+    const letter = m[1];
+    // MSRB uses two levels: (a) then (i). Inside an (a), ambiguous letters
+    // resolve as Roman.
+    if (
+      AMBIGUOUS_ROMAN_LETTER.test(letter) &&
+      stack.some((p) => p.level === 0)
+    ) {
+      return { level: 1, marker: `(${letter})` };
+    }
+    return { level: 0, marker: `(${letter})` };
+  }
+  return null;
+}
+
+// Strip a detected paragraph marker from the line's rendered text, keeping
+// any prose that follows it on the same line.
+function stripDetectedMarker(line: string): string {
+  // Strip leading Markdown leader once, then strip the paragraph marker.
+  const noLeader = line.replace(/^(?:#{1,6}\s+|[-*]\s+|\d+\.\s+)/, "");
+  return noLeader
+    .replace(/^\.(\d{2})\s*/, "")
+    .replace(/^\(([a-z0-9]+|[ivxlc]+)\)\s*/i, "")
+    .trim();
+}
+
+interface ParagraphFrame {
+  paragraphPath: string; // concatenation of marker stack, e.g. "(a)(2)(ii)"
+  headingPath: string;
+  lines: string[];
+}
+
+function chunkRegulatory(
+  body: string,
+  metadata: Omit<ChunkMetadata, "headingPath" | "chunkIndex" | "paragraphPath">,
+  matcher: MarkerMatcher
+): Chunk[] {
+  const lines = body.split("\n");
+  const headingStack: string[] = ["", "", ""];
+  const markerStack: ParagraphMarker[] = [];
+  const frames: ParagraphFrame[] = [];
+  let current: ParagraphFrame = { paragraphPath: "", headingPath: "", lines: [] };
+
+  function pathFromStack(): string {
+    return markerStack.map((m) => m.marker).join("");
+  }
+
+  function currentHeadingPath(): string {
+    return headingStack.filter((h) => h.length > 0).join(" > ");
+  }
+
+  function openFrame(): void {
+    current = {
+      paragraphPath: pathFromStack(),
+      headingPath: currentHeadingPath(),
+      lines: [],
+    };
+  }
+
+  function closeFrame(): void {
+    if (current.lines.some((l) => l.trim().length > 0)) {
+      frames.push(current);
+    }
+    openFrame();
+  }
+
+  for (const line of lines) {
+    const hdr = HEADER_RE.exec(line);
+    if (hdr) {
+      // Always close the current frame on a header boundary.
+      closeFrame();
+
+      const level = hdr[1].length;
+      headingStack[level - 1] = hdr[2].trim();
+      for (let d = level; d < headingStack.length; d++) headingStack[d] = "";
+
+      // Header may itself introduce a paragraph marker.
+      const headerMarker = matcher(line, markerStack);
+      if (headerMarker) {
+        while (
+          markerStack.length > 0 &&
+          markerStack[markerStack.length - 1].level >= headerMarker.level
+        ) {
+          markerStack.pop();
+        }
+        markerStack.push(headerMarker);
+      } else {
+        // A non-marker header resets the paragraph stack.
+        markerStack.length = 0;
+      }
+
+      openFrame();
+
+      // If the header introduces a paragraph marker, its trailing prose
+      // is the first sentence of that paragraph. Headers without a marker
+      // are purely structural — their title is not treated as chunk prose.
+      if (headerMarker) {
+        const residual = stripDetectedMarker(line);
+        if (residual.length > 0) current.lines.push(residual);
+      }
+      continue;
+    }
+
+    const marker = matcher(line, markerStack);
+    if (marker) {
+      closeFrame();
+      while (
+        markerStack.length > 0 &&
+        markerStack[markerStack.length - 1].level >= marker.level
+      ) {
+        markerStack.pop();
+      }
+      markerStack.push(marker);
+      openFrame();
+      const residual = stripDetectedMarker(line);
+      if (residual.length > 0) current.lines.push(residual);
+      continue;
+    }
+
+    current.lines.push(line);
+  }
+  closeFrame();
+
+  // Convert frames to chunks. A frame may produce multiple chunks if its
+  // prose exceeds the target-token budget; suffix with `p${N}` in order.
+  const chunks: Chunk[] = [];
+  let globalIndex = 0;
+
+  for (const frame of frames) {
+    const text = frame.lines.join("\n").trim();
+    if (text.length === 0) continue;
+
+    const sentences = splitSentences(text);
+    const packed = packSentencesIntoChunks(sentences);
+
+    for (let i = 0; i < packed.length; i++) {
+      const chunkText = packed[i];
+      if (chunkText.trim().length === 0) continue;
+
+      const chunkMetadata: ChunkMetadata = {
+        ...metadata,
+        headingPath: frame.headingPath,
+        paragraphPath: frame.paragraphPath,
+        chunkIndex: globalIndex,
+      };
+
+      const id =
+        frame.paragraphPath.length > 0
+          ? `${metadata.citationId}::${frame.paragraphPath}::p${i}`
+          : `${metadata.citationId}::chunk_${globalIndex}`;
+
+      chunks.push({ id, text: chunkText, metadata: chunkMetadata });
+      globalIndex++;
+    }
+  }
+
+  if (chunks.length === 0 && body.trim().length > 0) {
+    chunks.push({
+      id: `${metadata.citationId}::chunk_0`,
+      text: body.trim(),
+      metadata: {
+        ...metadata,
+        headingPath: "",
+        paragraphPath: "",
+        chunkIndex: 0,
+      },
+    });
+  }
+
+  return chunks;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+export function chunkDocument(
+  body: string,
+  metadata: Omit<ChunkMetadata, "headingPath" | "chunkIndex" | "paragraphPath">
+): Chunk[] {
+  switch (metadata.authority) {
+    case "SEC":
+      return chunkRegulatory(body, metadata, matchSecMarker);
+    case "FINRA":
+      return chunkRegulatory(body, metadata, (line) => matchFinraMarker(line));
+    case "MSRB":
+      return chunkRegulatory(body, metadata, matchMsrbMarker);
+    case "FinCEN":
+    case "Kestrel":
+    default:
+      return chunkFallback(body, metadata);
+  }
 }

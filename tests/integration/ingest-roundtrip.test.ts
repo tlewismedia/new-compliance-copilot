@@ -24,10 +24,12 @@ describe.skipIf(!hasCreds)("Ingest round-trip (requires Pinecone creds)", () => 
       const apiKey = process.env["PINECONE_API_KEY"]!;
       const pc = new Pinecone({ apiKey });
 
-      // Ingest the corpus file.
+      // Ingest a regulatory corpus file — exercises the citation-aware
+      // chunker path. The expected pinpoint is FINRA Rule 5310
+      // Supplementary Material .09 (best execution for fixed income).
       const corpusPath = resolve(
         process.cwd(),
-        "corpus/archive/v1/ffiec-cat-domain-5.md"
+        "corpus/finra-5310-best-execution.md"
       );
       const raw = readFileSync(corpusPath, "utf8");
       const { data: frontMatter, content: markdownBody } = matter(raw);
@@ -68,7 +70,7 @@ describe.skipIf(!hasCreds)("Ingest round-trip (requires Pinecone creds)", () => 
 
       // Poll until the record is searchable (up to 5 attempts × 2 s).
       const index = pc.index(indexName);
-      const knownSubstring = "cyber incident";
+      const knownSubstring = "best execution for fixed income";
       let topHitId: string | undefined;
 
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -89,7 +91,9 @@ describe.skipIf(!hasCreds)("Ingest round-trip (requires Pinecone creds)", () => 
       }
 
       expect(topHitId).toBeDefined();
-      expect(topHitId).toMatch(/^FFIEC-CAT-Domain-5::chunk_/);
+      // Chunk IDs for regulatory (FINRA) docs use the citation-aware format
+      // `${citationId}::${paragraphPath}::p${N}`.
+      expect(topHitId).toMatch(/^FINRA-Rule-5310::\.\d{2}::p\d+$/);
     },
     60_000 // 60 s timeout for network calls + polling
   );

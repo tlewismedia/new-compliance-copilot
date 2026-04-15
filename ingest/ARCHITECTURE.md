@@ -21,8 +21,15 @@ flowchart TD
 
     subgraph C[ingest/chunk.ts — chunkDocument]
         direction TB
-        C1[Split on H1/H2/H3<br/>headers] --> C2[Track heading path<br/>per section]
-        C2 --> C3[Pack sentences into<br/>~500-token chunks]
+        C0{authority?}
+        C0 -->|SEC / FINRA / MSRB| C_REG[Regulatory mode<br/>paragraph-aware]
+        C0 -->|Kestrel / FinCEN / …| C_FB[Fallback mode<br/>H1/H2/H3 + pack]
+        C_REG --> C1R[Track heading path<br/>+ paragraph marker stack]
+        C1R --> C2R[Emit 1 chunk per<br/>terminal paragraph]
+        C_FB --> C1[Split on H1/H2/H3 headers]
+        C1 --> C2[Track heading path<br/>per section]
+        C2R --> C3[Pack sentences into<br/>~500-token chunks]
+        C2 --> C3
         C3 --> C4[Add ~50-token<br/>overlap between chunks]
         C4 --> C5[Guard: never split<br/>mid-citation or mid-sentence]
     end
@@ -50,38 +57,54 @@ Every record in Pinecone is **flat** — no nested `metadata` object, no object 
 
 | Field | Type | Example |
 |---|---|---|
-| `id` | string | `12 CFR 1026.18::chunk_0` |
+| `id` | string | `17-CFR-240.15l-1::(a)(2)(ii)::p0` (regulatory) · `Kestrel-WSP-Equities::chunk_0` (fallback) |
 | `chunk_text` | string | chunk body (embedded by Pinecone via index `fieldMap`) |
-| `title` | string | `"CFPB Regulation Z — §1026.18"` |
-| `source` | string | `"CFPB"` |
-| `citation_id` | string | `"12 CFR 1026.18"` |
-| `jurisdiction` | string | `"US-Federal"` |
-| `doc_type` | string | `"regulation"` |
-| `effective_date` | string | `"2011-12-30"` |
-| `source_url` | string | canonical `.gov` URL |
+| `title` | string | `"Regulation Best Interest — 17 CFR 240.15l-1"` |
+| `source` | string | `"SEC"` |
+| `authority` | string | `"SEC"` / `"FINRA"` / `"MSRB"` / `"FinCEN"` / `"Kestrel"` |
+| `citation_id` | string | `"17-CFR-240.15l-1"` |
+| `jurisdiction` | string | `"US-Federal"` / `"SRO"` / `"Internal"` |
+| `doc_type` | string | `"regulation"` / `"rule"` / `"guidance"` / `"enforcement"` / `"internal"` / `"operational"` |
+| `effective_date` | string | `"2020-06-30"` |
+| `source_url` | string | canonical `.gov` / `.finra.org` URL or `internal://` scheme |
+| `version_status` | string | `"current"` / `"proposed"` / `"superseded"` |
+| `topic_tags` | string[] | `["best-interest", "retail-customers"]` |
 | `chunk_index` | number | `0` |
-| `heading_path` | string | `"Truth in Lending > Required disclosures"` |
+| `heading_path` | string | `"§ 240.15l-1 > (a) Best interest obligation > (2) Care obligation"` |
+| `paragraph_path` | string | `"(a)(2)(ii)"` (regulatory) · `""` (fallback) |
 
 ---
 
 ## Chunking strategy
 
-```mermaid
-flowchart LR
-    A[Raw markdown] --> B{Has headers?}
-    B -->|Yes| C[Split at H1/H2/H3<br/>boundaries]
-    B -->|No| D[Treat whole body<br/>as one section]
-    C --> E[Pack sentences<br/>~500 tokens each]
-    D --> E
-    E --> F[Slide 50-token<br/>overlap window]
-    F --> G[Chunk[]]
-```
+`chunkDocument` dispatches on `metadata.authority`:
+
+- **Regulatory mode** (`SEC`, `FINRA`, `MSRB`) — recognises paragraph markers
+  alongside H1/H2/H3 headers. SEC/CFR markers are `(a)` → `(1)` → `(i)`;
+  FINRA Supplementary Material markers are `.01`–`.99`; MSRB is `(a)` →
+  `(i)`. The chunker walks the body, tracks a heading stack and a paragraph
+  marker stack, and emits one chunk per terminal paragraph (the deepest
+  `(i)` / `(ii)` / `.NN` level containing prose). Ambiguous Roman-letter
+  markers (`(i)`, `(v)`, `(x)`, `(l)`, `(c)`) are resolved using the
+  current marker stack: inside a `(N)` they read as Roman numerals, at the
+  top level they read as letters.
+- **Fallback mode** (`Kestrel`, `FinCEN`, anything else) — the legacy
+  H1/H2/H3 + sentence-packing logic. Emits one chunk per heading section,
+  packed to the ~500-token budget.
+
+Within either mode, a frame whose prose exceeds the target token budget
+is split across multiple chunks via the sentence packer with ~50-token
+overlap between adjacent chunks.
 
 **Token heuristic:** `1 token ≈ 0.75 words` → target word budget = 375 words, overlap = 38 words.
 
-**Citation protection:** sentence splitter guards against splitting on `.` preceded by a digit or uppercase letter, preserving strings like `12 CFR 1026.18` and `U.S.C.` within a single chunk.
+**Citation protection:** sentence splitter guards against splitting on `.` preceded by a digit or uppercase letter, preserving strings like `17 CFR 240.15l-1` and `U.S.C.` within a single chunk.
 
-**ID format:** `${citationId}::chunk_${globalIndex}` — stable across re-runs, enabling idempotent upserts.
+**ID format:**
+- Regulatory: `${citationId}::${paragraphPath}::p${N}` (e.g. `FINRA-Rule-5310::.09::p0`).
+- Fallback: `${citationId}::chunk_${globalIndex}` (unchanged).
+
+Both formats are stable across re-runs, enabling idempotent upserts.
 
 ---
 
