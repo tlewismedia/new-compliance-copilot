@@ -41,3 +41,6 @@ out/
 # Claude local
 .claude/settings.local.json
 .claude/worktrees/
+
+# Eval results — per-run artifacts; the benchmark itself is committed.
+eval/results/
