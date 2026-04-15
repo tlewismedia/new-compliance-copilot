@@ -63,7 +63,33 @@ Validation runs at ingest; missing fields produce `status: "skipped"`.
 | `bsa-aml-broker-dealer.md` | FinCEN | 31 CFR Part 1023 | regulation | current | n/a |
 | `enforcement-finra-awc-best-ex.md` | FINRA | FINRA-AWC-2023056789201 | enforcement | current | n/a |
 
-Internal (Kestrel-synthesized) documents ship in Issue B.
+## Document inventory — internal Kestrel documents
+
+Every internal document has `authority: "Kestrel"`, `jurisdiction: "Internal"`,
+and a `source_url` under the `internal://kestrel/...` scheme. Policies use
+`doc_type: "internal"`; dated artefacts (exam letters, committee minutes,
+certifications, surveillance summaries) use `doc_type: "operational"`.
+
+| File | Citation ID | Doc type | Effective |
+|---|---|---|---|
+| `kestrel-wsp-equities.md` | Kestrel-WSP-Equities | internal | 2025-07-01 |
+| `kestrel-code-of-ethics.md` | Kestrel-Code-of-Ethics | internal | 2025-04-01 |
+| `kestrel-best-execution-policy.md` | Kestrel-Best-Execution-Policy | internal | 2025-09-15 |
+| `kestrel-reg-bi-disclosure-procedures.md` | Kestrel-Reg-BI-Disclosure-Procedures | internal | 2025-01-15 |
+| `kestrel-market-access-controls.md` | Kestrel-Market-Access-Controls | internal | 2025-02-01 |
+| `kestrel-reg-sho-locate-policy.md` | Kestrel-Reg-SHO-Locate-Policy | internal | 2024-09-01 |
+| `kestrel-information-barriers.md` | Kestrel-Information-Barriers | internal | 2025-03-10 |
+| `kestrel-aml-program.md` | Kestrel-AML-Program | internal | 2025-10-01 |
+| `kestrel-marketing-rule-review.md` | Kestrel-Marketing-Rule-Review | internal | 2025-06-15 |
+| `kestrel-error-correction-policy.md` | Kestrel-Error-Correction-Policy | internal | 2024-11-01 |
+| `kestrel-finra-exam-letter-2025.md` | Kestrel-FINRA-Exam-Letter-2025 | operational | 2025-03-28 |
+| `kestrel-best-ex-committee-minutes-q1-2026.md` | Kestrel-Best-Ex-Committee-Minutes-Q1-2026 | operational | 2026-03-05 |
+| `kestrel-wsp-annual-cert-2025.md` | Kestrel-WSP-Annual-Cert-2025 | operational | 2026-02-20 |
+| `kestrel-trade-surveillance-alert-summary.md` | Kestrel-Trade-Surveillance-Alert-Summary | operational | 2026-01-22 |
+
+Every internal doc names at least one external `citation_id` in its body
+(e.g. `` `17 CFR 240.15l-1` ``, `` `FINRA-Rule-5310` ``) to support the
+cross-reference extractor landing in Issue D.
 
 ## Coverage
 
@@ -83,6 +109,10 @@ non-commercial regulatory research and every document carries a
 The `enforcement-finra-awc-best-ex.md` document is a hypothetical
 reconstruction representative of the AWCs published in FINRA's
 Disciplinary Actions database and is labeled as such inside the file.
+
+All `kestrel-*.md` documents are original synthetic content written for
+this project and do not reproduce any real institution's policies,
+procedures, or internal artefacts.
 
 ## Adding a new document
 
