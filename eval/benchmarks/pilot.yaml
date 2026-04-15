@@ -2,65 +2,193 @@
 #
 # Schema (per eval-pilot-plan.md):
 #   - query: natural-language question, written in user voice
-#     expected_chunk_ids: list of chunk IDs that should appear in top-K retrieval
+#     expected_chunk_ids: chunk IDs that should appear in top-K retrieval
+#     keywords: load-bearing terms from the cited passage that a correct
+#               answer must convey. Source-anchored; query echoes filtered out
+#               so the metric measures substantive content, not query parroting.
+#               Scored as fraction matched (case-insensitive substring).
+#     reference_answer: 1-3 sentence canonical answer drafted from the cited
+#               chunks, in the model's voice with the rule citation inline.
+#               Not scored today — sits ready for LLM-as-judge or
+#               embedding-similarity comparison.
 #     notes: free-text — what the item is testing
 #
 # Chunk ID format (see ingest/ARCHITECTURE.md):
 #   Regulatory (SEC/FINRA/MSRB):  ${citationId}::${paragraphPath}::p${N}
 #   Fallback   (FinCEN/Kestrel):  ${citationId}::${headingSlug}[::p${N}]
 #
-# Run `pnpm verify-eval` to confirm every expected_chunk_id below actually
-# exists in the chunker output. The verifier prints near-misses so wrong IDs
-# can be patched without re-grepping by hand.
+# Run `pnpm verify-eval` after corpus or chunker changes to confirm every
+# expected_chunk_id still resolves.
 
 - query: "When can a broker-dealer skip the locate requirement for a short sale?"
   expected_chunk_ids:
     - "17-CFR-242.203::(b)(2)::p0"
+  keywords:
+    - "bona-fide market making"
+    - "market maker"
+    - "does not apply"
+  reference_answer: |
+    Under Reg SHO Rule 203(b)(2), the locate requirement does not apply to
+    short sales by a broker-dealer in connection with bona-fide market-making
+    activity, or to short sales for the account of a registered market maker
+    on the same basis.
   notes: "Definitional. Bona-fide market making exception under Reg SHO Rule 203(b)(2)."
 
 - query: "How often do we have to do the regular and rigorous best-ex review, and what factors does it need to cover?"
   expected_chunk_ids:
     - "FINRA-Rule-5310::.02::p0"
+  keywords:
+    - "quarterly"
+    - "security-by-security"
+    - "order-size"
+    - "price improvement"
+    - "payment for order flow"
+  reference_answer: |
+    FINRA Rule 5310 Supplementary Material .02 requires the regular and
+    rigorous review at least quarterly, conducted on a security-by-security,
+    type-of-order, and order-size basis. It must consider factors including
+    price improvement opportunities, customer needs, internalization, and
+    payment-for-order-flow arrangements, with findings documented.
   notes: "Procedural + synthesis. Quarterly minimum, eight enumerated factors, segmentation by security/order-type/order-size."
 
 - query: "What's the lowest our net capital can go after we pay a dividend out to the parent?"
   expected_chunk_ids:
     - "17-CFR-240.15c3-1::(c)::p0"
+  keywords:
+    - "120%"
+    - "25%"
+    - "haircuts"
+    - "aggregate indebtedness"
+    - "10 times"
+  reference_answer: |
+    Under SEC Rule 15c3-1(c), a broker-dealer may not permit an equity-capital
+    withdrawal that would reduce net capital below 120% of the minimum
+    requirement, below 25% of haircuts on proprietary positions, or that
+    would cause aggregate indebtedness to exceed 10 times net capital.
   notes: "Numeric threshold. 120% of minimum, 25% of haircuts, 10x AI ratio."
 
 - query: "What documents count for verifying a new individual customer's identity under the CIP rule?"
   expected_chunk_ids:
     - "31-CFR-Part-1023::1023.220-customer-identification-program-cip-.-a-minimum-requirements.-3-verification."
+  keywords:
+    - "driver's license"
+    - "passport"
+    - "non-documentary"
+    - "consumer reporting agency"
+  reference_answer: |
+    Under the FinCEN CIP rule (31 CFR 1023.220(a)(3)), a broker-dealer may
+    verify an individual's identity using documents — typically an unexpired
+    government-issued ID such as a driver's license or passport — or
+    non-documentary methods such as comparing customer information against
+    a consumer reporting agency, public database, or other independent source.
   notes: "Definitional. Documentary (driver's license, passport) vs non-documentary (CRA, public DB) methods. FinCEN docs use the fallback chunker → heading-slug IDs."
 
 - query: "If we have a fail-to-deliver on a short sale, by when do we have to close it out — and is it different for long sales?"
   expected_chunk_ids:
     - "17-CFR-242.204::(a)::p0"
+  keywords:
+    - "settlement day following"
+    - "third consecutive"
+    - "bona-fide market making"
+    - "borrow or purchase"
+  reference_answer: |
+    Under Reg SHO Rule 204, a fail-to-deliver on a short sale must be closed
+    out by borrowing or purchasing securities of like kind and quantity by
+    the beginning of regular trading hours on the settlement day following
+    settlement date. The deadline is extended to the third consecutive
+    settlement day for fails resulting from long sales or from bona-fide
+    market-making activity.
   notes: "Procedural + threshold. T+1 for shorts, T+3 for longs/bona-fide MM."
 
 - query: "Does the surprise exam under the custody rule actually need to be a surprise, or can our auditor schedule it like the financial audit?"
   expected_chunk_ids:
     - "17-CFR-275.206(4)-2::(a)::p0"
     - "17-CFR-275.206(4)-2::(d)::p0"
+  keywords:
+    - "independent public accountant"
+    - "without prior notice"
+    - "irregular"
+    - "calendar year"
+  reference_answer: |
+    Under Advisers Act Rule 206(4)-2, the custody-rule examination must be
+    performed by an independent public accountant at least once each
+    calendar year, at a time chosen by the accountant without prior notice
+    or announcement to the adviser, and that is irregular from year to year.
+    It cannot be scheduled in advance like a routine financial audit.
   notes: "Procedural. Annual, no prior notice, irregular year-to-year. (a) is the rule itself; (d) is the explicit timing section. Tied to Kestrel Advisors SEC exam finding."
 
 - query: "How often do branch offices need to be inspected under FINRA 3110?"
   expected_chunk_ids:
     - "FINRA-Rule-3110::rule-3110.-supervision-c-internal-inspections.-1-inspection-cycles."
+  keywords:
+    - "annually"
+    - "Office of Supervisory Jurisdiction"
+    - "three years"
+    - "non-branch"
+  reference_answer: |
+    Under FINRA Rule 3110(c)(1), each member must inspect every Office of
+    Supervisory Jurisdiction and every branch office that supervises one or
+    more non-branch locations at least annually, and every other branch
+    office (one that is neither an OSJ nor supervisory) at least every
+    three years. Non-branch locations are inspected on a regular schedule
+    presumed to be at least every three years.
   notes: "Procedural + numeric. Annual for OSJ/supervisory branches, every 3 years for non-supervisory. FINRA's matcher only recognises .NN markers, so (c)(1)-style sub-paragraphs land on the heading-slug fallback."
 
 - query: "What pre-trade controls does the market access rule require us to have in place?"
   expected_chunk_ids:
     - "17-CFR-240.15c3-5::market-access.-c-required-controls.-c-2-regulatory-risk-management-controls."
+  keywords:
+    - "restricted"
+    - "Reg SHO"
+    - "Rule 201"
+    - "trading halts"
+    - "surveillance"
+    - "manipulation"
+  reference_answer: |
+    SEC Rule 15c3-5(c)(2) requires regulatory risk-management controls that
+    prevent orders in securities the firm or customer is restricted from
+    trading, ensure pre-trade compliance with Reg SHO (locate evidence for
+    short sales) and Rule 201 (alternative uptick), block order entry during
+    trading halts, run post-trade surveillance for manipulation, spoofing,
+    and layering, and prevent unauthorized access to the order-entry system.
   notes: "Procedural synthesis. Six categories: restricted-list, Reg SHO locate, Rule 201, halts, surveillance, access controls. The chunker captures only one paragraph marker per heading line, so (c)(2)-style headings land on the heading-slug fallback."
 
 - query: "What best-ex factors does Kestrel's policy require us to weigh, and is anything in there beyond what FINRA requires?"
   expected_chunk_ids:
     - "Kestrel-Best-Execution-Policy::kestrel-best-execution-policy-2.-the-best-execution-standard"
+  keywords:
+    - "payment for order flow"
+    - "internalization"
+    - "factor 6"
+    - "Rule 5310(a)"
+  reference_answer: |
+    Kestrel's Best Execution Policy applies the FINRA Rule 5310(a) factors —
+    character of the market, size and type of transaction, number of markets
+    checked, accessibility of the quotation, and terms and conditions of the
+    order — and adds an explicit sixth factor that the firm has elevated
+    above the regulatory baseline: the existence and economics of any
+    payment-for-order-flow, internalization, or affiliated-routing arrangement.
   notes: "Internal policy + reg cross-ref. PFOF/internalization elevated as explicit factor 6 above Rule 5310(a) baseline."
 
 - query: "What did the best-ex committee decide about Venue A in Q1 2026, and why didn't they reroute?"
   expected_chunk_ids:
     - "Kestrel-Best-Ex-Committee-Minutes-Q1-2026::kestrel-best-execution-committee-q1-2026-meeting-minutes-3.-q4-2025-regular-and-rigorous-review"
     - "Kestrel-Best-Execution-Policy::kestrel-best-execution-policy-4.-regular-and-rigorous-review-4.4-alert-thresholds"
+  keywords:
+    - "no change in routing"
+    - "enhanced monitoring"
+    - "15%"
+    - "25%"
+    - "small-size"
+  reference_answer: |
+    The Best Execution Committee concluded at its Q1 2026 meeting that
+    routing practices remain consistent with FINRA Rule 5310 best-execution
+    obligations and that no change in routing shares was warranted on the
+    Q4 2025 evidence alone, despite Venue A's price-improvement advantage
+    in small-size market orders declining roughly 15% year-over-year. Under
+    the policy's §4.4 alert thresholds (material PI deterioration is defined
+    as a quarter-over-quarter decline greater than 25%, or four consecutive
+    quarters of decline), the observed YoY drop did not trigger a reroute;
+    the committee instead approved enhanced monthly monitoring of that
+    segment through Q1 2026.
   notes: "Hard / cross-doc synthesis. Venue A PI down ~15% YoY but below the material-PI-deterioration threshold in policy §4.4."
