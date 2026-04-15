@@ -3,6 +3,7 @@ title: "Proposed SEC Regulation Best Execution — Proposed Rules 1100, 1101, an
 source: "SEC"
 authority: "SEC"
 citation_id: "SEC-Release-34-96496"
+citation_id_display: "SEC Release 34-96496"
 jurisdiction: "US-Federal"
 doc_type: "regulation"
 effective_date: "n/a"

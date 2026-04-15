@@ -3,6 +3,7 @@ title: "Kestrel Securities — Written Supervisory Procedures: Equities Trading 
 source: "Kestrel Securities, LLC — Compliance Department"
 authority: "Kestrel"
 citation_id: "Kestrel-WSP-Equities"
+citation_id_display: "Kestrel WSP Equities"
 jurisdiction: "Internal"
 doc_type: "internal"
 effective_date: "2025-07-01"

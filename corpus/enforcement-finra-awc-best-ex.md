@@ -3,6 +3,7 @@ title: "FINRA Letter of Acceptance, Waiver and Consent (AWC) — Best Execution 
 source: "FINRA"
 authority: "FINRA"
 citation_id: "FINRA-AWC-2023056789201"
+citation_id_display: "FINRA AWC 2023056789201"
 jurisdiction: "SRO"
 doc_type: "enforcement"
 effective_date: "2024-11-12"

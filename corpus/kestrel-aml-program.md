@@ -3,6 +3,7 @@ title: "Kestrel AML Program — Anti-Money Laundering and Counter-Financing of T
 source: "Kestrel Securities, LLC — AML Compliance"
 authority: "Kestrel"
 citation_id: "Kestrel-AML-Program"
+citation_id_display: "Kestrel AML Program"
 jurisdiction: "Internal"
 doc_type: "internal"
 effective_date: "2025-10-01"

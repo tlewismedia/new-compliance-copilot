@@ -3,6 +3,7 @@ title: "Kestrel Advisors — Marketing Rule Review and Advertisement-Approval Pr
 source: "Kestrel Advisors, LLC — Compliance"
 authority: "Kestrel"
 citation_id: "Kestrel-Marketing-Rule-Review"
+citation_id_display: "Kestrel Marketing Rule Review"
 jurisdiction: "Internal"
 doc_type: "internal"
 effective_date: "2025-06-15"
