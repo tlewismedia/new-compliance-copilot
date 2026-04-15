@@ -9,12 +9,22 @@ export interface Citation {
 export interface ChunkMetadata {
   readonly title: string;
   readonly source: string;
+  readonly authority: "SEC" | "FINRA" | "MSRB" | "FinCEN" | "Kestrel";
   readonly citationId: string;
-  readonly jurisdiction: string;
-  readonly docType: string;
+  readonly jurisdiction: "US-Federal" | "SRO" | "Internal";
+  readonly docType:
+    | "regulation"
+    | "rule"
+    | "guidance"
+    | "enforcement"
+    | "internal"
+    | "operational";
   readonly effectiveDate: string;
   readonly sourceUrl: string;
+  readonly versionStatus: "current" | "proposed" | "superseded";
+  readonly topicTags: readonly string[];
   readonly headingPath: string;
+  readonly paragraphPath: string;
   readonly chunkIndex: number;
 }
 

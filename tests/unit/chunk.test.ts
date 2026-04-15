@@ -17,14 +17,20 @@ import type { ChunkMetadata } from "../../shared/types";
 // Shared helpers / fixtures
 // ---------------------------------------------------------------------------
 
-const BASE_METADATA: Omit<ChunkMetadata, "headingPath" | "chunkIndex"> = {
+const BASE_METADATA: Omit<
+  ChunkMetadata,
+  "headingPath" | "chunkIndex" | "paragraphPath"
+> = {
   title: "Test Document",
   source: "TestSource",
+  authority: "SEC",
   citationId: "TEST-DOC",
   jurisdiction: "US-Federal",
   docType: "guidance",
   effectiveDate: "2024-01-01",
   sourceUrl: "https://example.com/test",
+  versionStatus: "current",
+  topicTags: [],
 };
 
 /** Word-count heuristic: 1 token ≈ 0.75 words */

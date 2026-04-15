@@ -8,13 +8,17 @@ type PineconeIngestRecord = {
   chunk_text: string;
   title: string;
   source: string;
+  authority: string;
   citation_id: string;
   jurisdiction: string;
   doc_type: string;
   effective_date: string;
   source_url: string;
+  version_status: string;
+  topic_tags: string[];
   chunk_index: number;
   heading_path: string;
+  paragraph_path: string;
   [key: string]: string | number | boolean | string[];
 };
 
@@ -25,13 +29,17 @@ function chunkToRecord(chunk: Chunk): PineconeIngestRecord {
     chunk_text: chunk.text,
     title: m.title,
     source: m.source,
+    authority: m.authority,
     citation_id: m.citationId,
     jurisdiction: m.jurisdiction,
     doc_type: m.docType,
     effective_date: m.effectiveDate,
     source_url: m.sourceUrl,
+    version_status: m.versionStatus,
+    topic_tags: [...m.topicTags],
     chunk_index: m.chunkIndex,
     heading_path: m.headingPath,
+    paragraph_path: m.paragraphPath,
   };
 }
 
