@@ -1,0 +1,13 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - heading "Compliance Copilot" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Ask a regulatory compliance question and get a cited answer.
+    - generic [ref=e5]:
+      - textbox "e.g. What are baseline requirements for cyber incident detection?" [ref=e6]: What are the baseline requirements for cyber incident detection?
+      - button "Submit" [ref=e7] [cursor=pointer]
+    - generic [ref=e18]:
+      - heading "Answer" [level=2] [ref=e19]
+      - paragraph [ref=e20]: I cannot answer from the available sources.
+  - button "Open Next.js Dev Tools" [ref=e13] [cursor=pointer]:
+    - img [ref=e14]
+  - alert [ref=e17]

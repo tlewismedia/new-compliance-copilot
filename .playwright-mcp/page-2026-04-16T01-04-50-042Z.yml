@@ -1,0 +1,31 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - generic [ref=e9]:
+          - generic [ref=e10]: Compliance Copilot
+          - generic [ref=e11]: Grounded · Cited · Auditable
+      - generic [ref=e12]:
+        - generic [ref=e13]: "Index: compliance-copilot"
+        - generic [ref=e17]: TL
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]: Question
+            - generic [ref=e24]: Press ⌘↵ to submit
+          - generic [ref=e25]:
+            - textbox "Question" [active] [ref=e27]:
+              - /placeholder: e.g. What are baseline requirements for cyber incident detection?
+            - button "Ask" [disabled] [ref=e28]:
+              - generic [ref=e29]:
+                - text: Ask
+                - img [ref=e30]
+        - complementary [ref=e32]:
+          - generic [ref=e33]:
+            - generic [ref=e36]: Citations
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - paragraph [ref=e41]: Citations will appear here once you ask a question.
+  - alert [ref=e42]
