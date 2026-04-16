@@ -1,6 +1,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import type { GraphState } from "../state";
 import type { ChunkMetadata, Retrieval } from "../../shared/types";
+import { logMemory } from "../instrument";
 
 const str = (f: Record<string, unknown>, key: string): string =>
   String(f[key] ?? "");
@@ -9,9 +10,11 @@ export function createRetrieveNode(
   vectorStore: ReturnType<Pinecone["index"]>
 ) {
   return async (state: GraphState): Promise<Partial<GraphState>> => {
+    const t0 = Date.now();
     const response = await vectorStore.searchRecords({
       query: { topK: 5, inputs: { text: state.query } },
     });
+    const pineconeMs = Date.now() - t0;
 
     const retrievals: Retrieval[] = response.result.hits.map((hit) => {
       const f = hit.fields as Record<string, unknown>;
@@ -44,6 +47,13 @@ export function createRetrieveNode(
         score: hit._score,
         metadata,
       };
+    });
+
+    const totalChars = retrievals.reduce((n, r) => n + r.text.length, 0);
+    logMemory("retrieve", {
+      hits: retrievals.length,
+      chars: totalChars,
+      pineconeMs,
     });
 
     return { retrievals };

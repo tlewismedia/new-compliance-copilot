@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { GraphState } from "../state";
 import type { Citation } from "../../shared/types";
+import { logMemory } from "../instrument";
 
 const SYSTEM_PROMPT = `You are a compliance assistant. Answer questions using ONLY the provided source chunks below.
 Use inline citation markers like [^1], [^2], etc. to reference specific chunks when making claims.
@@ -25,23 +26,35 @@ function formatContext(state: GraphState): string {
     .join("\n\n");
 }
 
-function parseCitations(answer: string, state: GraphState): Citation[] {
-  const markers = new Set<number>();
+function renumberCitations(
+  answer: string,
+  state: GraphState,
+): { answer: string; citations: Citation[] } {
   const regex = /\[\^(\d+)\]/g;
+  const orderFirstSeen: number[] = [];
+  const remap = new Map<number, number>();
   let match: RegExpExecArray | null;
   while ((match = regex.exec(answer)) !== null) {
-    const n = parseInt(match[1], 10);
-    if (n >= 1 && n <= state.retrievals.length) {
-      markers.add(n);
+    const original = parseInt(match[1], 10);
+    if (original < 1 || original > state.retrievals.length) continue;
+    if (!remap.has(original)) {
+      remap.set(original, orderFirstSeen.length + 1);
+      orderFirstSeen.push(original);
     }
   }
 
-  return Array.from(markers)
-    .sort((a, b) => a - b)
-    .map((n) => ({
-      chunkId: state.retrievals[n - 1].chunkId,
-      marker: `[^${n}]`,
-    }));
+  const rewritten = answer.replace(/\[\^(\d+)\]/g, (m, raw) => {
+    const n = parseInt(raw, 10);
+    const mapped = remap.get(n);
+    return mapped ? `[^${mapped}]` : m;
+  });
+
+  const citations: Citation[] = orderFirstSeen.map((original, i) => ({
+    chunkId: state.retrievals[original - 1].chunkId,
+    marker: `[^${i + 1}]`,
+  }));
+
+  return { answer: rewritten, citations };
 }
 
 export function createGenerateNode(openai: OpenAI) {
@@ -49,6 +62,7 @@ export function createGenerateNode(openai: OpenAI) {
     const context = formatContext(state);
     const userContent = `Source chunks:\n\n${context}\n\nQuestion: ${state.query}`;
 
+    const t0 = Date.now();
     const response = await openai.chat.completions.create({
       model: MODEL,
       max_tokens: 1024,
@@ -57,12 +71,19 @@ export function createGenerateNode(openai: OpenAI) {
         { role: "user", content: userContent },
       ],
     });
+    const openaiMs = Date.now() - t0;
 
-    const answer = response.choices[0]?.message?.content ?? "";
+    const rawAnswer = response.choices[0]?.message?.content ?? "";
+    const { answer, citations } = renumberCitations(rawAnswer, state);
 
-    return {
-      answer,
-      citations: parseCitations(answer, state),
-    };
+    logMemory("generate", {
+      promptChars: userContent.length,
+      answerChars: answer.length,
+      citations: citations.length,
+      usage: JSON.stringify(response.usage ?? {}),
+      openaiMs,
+    });
+
+    return { answer, citations };
   };
 }
