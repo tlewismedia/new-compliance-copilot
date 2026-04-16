@@ -8,8 +8,8 @@ import {
 } from "../../../../eval/core";
 
 export const runtime = "nodejs";
-// Judge is a model call per item × 30 items — leave a 5-minute budget and
-// rely on NDJSON streaming to keep the connection warm.
+// Items run in parallel (see POST), but keep a 5-minute budget as a
+// safety cap for the slowest item and network hiccups.
 export const maxDuration = 300;
 
 /**
@@ -60,41 +60,44 @@ export async function POST(): Promise<Response> {
       }> = [];
 
       try {
-        for (let i = 0; i < loadedItems.length; i++) {
-          const item = loadedItems[i];
-
-          // Production answer via compiled graph
-          const state = await graph.invoke({ query: item.query });
-          const answer = state.answer ?? "";
-
-          try {
-            const judge = await judgeAnswer(client, item, answer);
-            perItem.push({
-              category: item.category,
-              accuracy: judge.accuracy,
-              completeness: judge.completeness,
-              relevance: judge.relevance,
-            });
-            write({
-              index: i + 1,
-              total,
-              query: item.query,
-              category: item.category,
-              accuracy: judge.accuracy,
-              completeness: judge.completeness,
-              relevance: judge.relevance,
-              feedback: judge.feedback,
-            });
-          } catch (err) {
-            write({
-              index: i + 1,
-              total,
-              query: item.query,
-              category: item.category,
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        }
+        // Run generate + judge for every item concurrently. Each item is
+        // 2 OpenAI calls (graph generate + judge) — for a 30-item benchmark
+        // that's ~60 calls, well under any tier's RPM and handled by the
+        // Node SDK's built-in 429 retries. This cuts wall-clock from
+        // ~sequential sum-of-latencies down to ~max-of-latencies.
+        await Promise.all(
+          loadedItems.map(async (item, i) => {
+            try {
+              const state = await graph.invoke({ query: item.query });
+              const answer = state.answer ?? "";
+              const judge = await judgeAnswer(client, item, answer);
+              perItem.push({
+                category: item.category,
+                accuracy: judge.accuracy,
+                completeness: judge.completeness,
+                relevance: judge.relevance,
+              });
+              write({
+                index: i + 1,
+                total,
+                query: item.query,
+                category: item.category,
+                accuracy: judge.accuracy,
+                completeness: judge.completeness,
+                relevance: judge.relevance,
+                feedback: judge.feedback,
+              });
+            } catch (err) {
+              write({
+                index: i + 1,
+                total,
+                query: item.query,
+                category: item.category,
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }),
+        );
 
         const avg = (xs: number[]) =>
           xs.length === 0 ? 0 : xs.reduce((s, x) => s + x, 0) / xs.length;
