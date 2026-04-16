@@ -42,6 +42,7 @@ Rules:
 
 - Branch name: `issue-<N>/<short-description>`.
 - TypeScript only. No Python. No plain JS.
+- **One React component per file.** Each exported React function gets its own `.tsx` file. Small private helpers used only by that component (e.g. a `Spinner` inside `question-card.tsx`) may stay in the same file, but every component the parent imports must live in a separate file.
 - Write tests only when the spec asks for them.
 - Do not exceed spec scope. If something outside scope needs changing, surface it — don't silently do it.
 - Do not open, close, or label issues. Do not open PRs.
