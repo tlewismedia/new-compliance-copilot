@@ -27,7 +27,7 @@ export function QuestionCard({
         </label>
         <span className="text-[11px] text-[#8a968f]">Press ⌘↵ to submit</span>
       </div>
-      <div className="mt-3 flex items-end gap-3">
+      <div className="mt-3 flex items-center gap-3">
         <div className="relative flex-1">
           <textarea
             id="question-input"
@@ -36,9 +36,9 @@ export function QuestionCard({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             disabled={loading}
-            rows={2}
+            rows={1}
             placeholder="e.g. What are baseline requirements for cyber incident detection?"
-            className="min-h-[56px] w-full resize-none rounded-xl border border-[#2d4a35]/10 bg-white px-4 py-3 text-[15px] leading-relaxed text-[#1f2a23] placeholder-[#a0a9a4] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_1px_0_0_rgba(45,74,53,0.04)] focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-10 w-full resize-none rounded-xl border border-[#2d4a35]/10 bg-white px-4 py-0 text-[15px] leading-[2.5rem] text-[#1f2a23] placeholder-[#a0a9a4] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_1px_0_0_rgba(45,74,53,0.04)] focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <button
@@ -46,7 +46,7 @@ export function QuestionCard({
           onClick={onSubmit}
           disabled={disabled}
           aria-label={loading ? "Thinking" : "Ask"}
-          className="group relative self-stretch overflow-hidden rounded-xl bg-[#2d4a35] px-5 py-3 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.35)] transition-all hover:bg-[#1f3526] hover:shadow-[0_4px_14px_-2px_rgba(45,74,53,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2d4a35]"
+          className="group relative h-10 shrink-0 overflow-hidden rounded-xl bg-[#2d4a35] px-5 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.35)] transition-all hover:bg-[#1f3526] hover:shadow-[0_4px_14px_-2px_rgba(45,74,53,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2d4a35]"
         >
           <span className="relative flex items-center gap-2">
             {loading ? (
