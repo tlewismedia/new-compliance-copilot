@@ -15,6 +15,7 @@ import { AnswerCard } from "../_components/answer-card";
 import { TraceSection } from "../_components/trace-section";
 import { CitationsPanel } from "../_components/citations-panel";
 import type { RunMeta } from "../_components/shared";
+import { appendHistory } from "../_components/history-store";
 
 export function DashboardPage(): React.JSX.Element {
   const [query, setQuery] = useState("");
@@ -54,6 +55,11 @@ export function DashboardPage(): React.JSX.Element {
         return;
       }
       setResult(data as QueryResponse);
+      appendHistory({
+        askedAt: startedAtIso,
+        query: askedQuery,
+        response: data as QueryResponse,
+      });
       setSubmittedQuery(askedQuery);
       setRunMeta({
         run: shortHex(),
