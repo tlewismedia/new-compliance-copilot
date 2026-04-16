@@ -37,6 +37,7 @@ export function createRetrieveNode(
         paragraphPath: str(f, "paragraph_path"),
         chunkIndex: Number(f["chunk_index"] ?? 0),
       };
+      
       return {
         chunkId: hit._id,
         text: str(f, "chunk_text"),

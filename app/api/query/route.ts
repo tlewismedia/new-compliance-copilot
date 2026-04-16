@@ -25,9 +25,11 @@ export async function POST(request: Request): Promise<NextResponse> {
       citations: state.citations ?? [],
       retrievals: state.retrievals ?? [],
     };
+
     return NextResponse.json(response);
   } catch (err) {
     console.error("[api/query] pipeline error:", err);
+    
     return NextResponse.json(
       { error: "Internal pipeline error" },
       { status: 500 },
