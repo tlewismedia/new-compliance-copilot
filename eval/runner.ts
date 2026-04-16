@@ -1,17 +1,23 @@
 /**
  * Pilot eval runner.
  *
- * For each benchmark item, runs the compiled graph to get an answer and the
- * top-5 retrievals (production retrieval), and separately retrieves top-10
- * chunks for keyword-based retrieval metrics. Scores five things per item:
+ * For each benchmark item, issues one direct Pinecone top-K query and scores
+ * four retrieval metrics from it; the first 5 chunk IDs feed pinpoint@5, and
+ * all K chunks feed the keyword metrics. No LLM is involved in the retrieval
+ * scoring path. When the judge is enabled (default), the retrieve + generate
+ * nodes are run separately to produce an answer for the judge to score.
  *
- *   Retrieval metrics
- *     - pinpoint_precision@5 : fraction of expected_chunk_ids in top-5 (strict
- *                              chunk-ID match; catches retrieval regressions).
+ *   Retrieval metrics (no LLM involved)
+ *     - pinpoint_precision@5 : fraction of expected_chunk_ids in the first 5
+ *                              of the top-K Pinecone result (strict chunk-ID
+ *                              match; catches retrieval regressions). Note:
+ *                              this is the raw top-5 from Pinecone, without
+ *                              the production graph's score threshold — for
+ *                              this metric, that's arguably more informative.
  *     - mrr                  : mean reciprocal rank of each keyword in the
- *                              top-10 chunk text (first hit only).
+ *                              top-K chunk text (first hit only).
  *     - ndcg                 : nDCG of each keyword with binary relevance.
- *     - keyword_coverage     : fraction of keywords found anywhere in top-10.
+ *     - keyword_coverage     : fraction of keywords found anywhere in top-K.
  *
  *   Answer metric (LLM-as-judge, skippable)
  *     - judge_accuracy / completeness / relevance (1-5 each) + feedback.
@@ -34,7 +40,8 @@ import "dotenv/config";
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
-import { graph } from "../pipeline/graph";
+import { createRetrieveNode } from "../pipeline/nodes/retrieve";
+import { createGenerateNode } from "../pipeline/nodes/generate";
 import {
   JUDGE_MODEL,
   RETRIEVAL_K,
@@ -285,6 +292,11 @@ async function main(): Promise<void> {
   const pineconeIndex = createPineconeIndex();
   const openai = createOpenAI();
 
+  // Generation is only used when the judge is enabled, so build the nodes
+  // lazily to keep --skip-judge free of LLM dependencies.
+  const retrieveNode = skipJudge ? null : createRetrieveNode(pineconeIndex);
+  const generateNode = skipJudge ? null : createGenerateNode(openai);
+
   const results: ItemResult[] = [];
 
   for (const [i, item] of items.entries()) {
@@ -292,31 +304,41 @@ async function main(): Promise<void> {
       `[${i + 1}/${items.length}] ${item.query.slice(0, 60)}… `,
     );
 
-    // Production retrieval + answer via the compiled graph (top-5)
-    const state = await graph.invoke({ query: item.query });
-    const topFiveIds = (state.retrievals ?? []).map((r) => r.chunkId);
-    const { pinpointPrecision } = scorePinpoint(
-      topFiveIds,
-      item.expected_chunk_ids,
-    );
-
-    // Separate top-10 retrieval for keyword-based retrieval metrics
-    const topTen = await retrieveForEval(
+    // One direct Pinecone top-K query powers both retrieval metrics.
+    const topK = await retrieveForEval(
       pineconeIndex,
       item.query,
       RETRIEVAL_K,
     );
+    const topFiveIds = topK.slice(0, 5).map((c) => c.chunkId);
+    const { pinpointPrecision } = scorePinpoint(
+      topFiveIds,
+      item.expected_chunk_ids,
+    );
     const { mrr, ndcg, keywordCoverage } = scoreKeywordMetrics(
       item.keywords,
-      topTen,
+      topK,
       RETRIEVAL_K,
     );
 
-    // LLM judge
-    const answer = state.answer ?? "";
+    // Answer generation + LLM judge (skipped with --skip-judge)
+    let answer = "";
     let judge: JudgeResult | undefined;
     if (!skipJudge) {
       try {
+        const retrieved = await retrieveNode!({
+          query: item.query,
+          retrievals: [],
+          answer: undefined,
+          citations: undefined,
+        });
+        const generated = await generateNode!({
+          query: item.query,
+          retrievals: retrieved.retrievals ?? [],
+          answer: undefined,
+          citations: undefined,
+        });
+        answer = generated.answer ?? "";
         judge = await judgeAnswer(openai, item, answer);
       } catch (err) {
         console.log();
