@@ -1,5 +1,6 @@
 import type { Citation, Retrieval } from "../../shared/types";
 import { Card } from "./card";
+import { CitationExcerpt } from "./citation-excerpt";
 import { authorityStyle, citationMarkerNumber } from "./shared";
 
 export function CitationCard({
@@ -18,11 +19,7 @@ export function CitationCard({
   const score = retrieval?.score;
   const version = retrieval?.metadata?.versionStatus;
   const date = retrieval?.metadata?.effectiveDate;
-  const excerptSrc = retrieval?.text ?? "";
-  const excerpt =
-    excerptSrc.length > 240
-      ? `${excerptSrc.slice(0, 240).trimEnd()}…`
-      : excerptSrc;
+  const excerpt = retrieval?.text ?? "";
   const sourceUrl = retrieval?.metadata?.sourceUrl;
 
   return (
@@ -64,11 +61,7 @@ export function CitationCard({
             {date && <span>Effective {date}</span>}
           </div>
         )}
-        {excerpt && (
-          <p className="mt-3 text-[12.5px] leading-relaxed text-[#3a4540]">
-            &ldquo;{excerpt}&rdquo;
-          </p>
-        )}
+        {excerpt && <CitationExcerpt text={excerpt} />}
         {sourceUrl && (
           <a
             href={sourceUrl}
