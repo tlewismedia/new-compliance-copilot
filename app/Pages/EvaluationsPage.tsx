@@ -1,4 +1,5 @@
-import { Card } from "../_components/card";
+import { AnswerEvaluation } from "../_components/answer-evaluation";
+import { RetrievalEvaluation } from "../_components/retrieval-evaluation";
 import { SERIF } from "../_components/shared";
 
 export function EvaluationsPage(): React.JSX.Element {
@@ -15,11 +16,10 @@ export function EvaluationsPage(): React.JSX.Element {
           Track answer quality across regression suites and ad-hoc probes.
         </p>
       </div>
-      <Card className="p-8">
-        <p className="text-[13px] text-[#6b7a70]">
-          Evaluations dashboard coming soon.
-        </p>
-      </Card>
+      <div className="space-y-8">
+        <RetrievalEvaluation />
+        <AnswerEvaluation />
+      </div>
     </main>
   );
 }
