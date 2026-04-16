@@ -170,13 +170,17 @@ function TraceNode({
 }
 
 function TraceConnector(): React.JSX.Element {
+  // Arrow glyph is 7.5 units tall (shaft y=1.25→8.75) inside a 10×10 viewBox,
+  // giving 1.25u of padding on top and bottom so the glyph is centered in its
+  // SVG box. With equal h-3 flanking lines and matching gap-0.5 gaps, the
+  // overall column is symmetric around the arrow glyph.
   return (
     <div className="flex py-1 pl-[33px]">
       <div className="flex flex-col items-center gap-0.5">
         <div className="h-3 w-px bg-[#9cc9a9]/60" />
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
           <path
-            d="M5 1V8.5M5 8.5L1.5 5M5 8.5L8.5 5"
+            d="M5 1.25V8.75M5 8.75L1.5 5.25M5 8.75L8.5 5.25"
             stroke="#6ea580"
             strokeWidth="1.2"
             strokeLinecap="round"
