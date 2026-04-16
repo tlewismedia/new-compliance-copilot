@@ -76,18 +76,21 @@ export function RetrievalEvaluation(): React.JSX.Element {
               tier={tierForRatio(summary.mrr)}
               format="ratio"
               hint={`Across ${summary.total} items`}
+              explanation="How high up the correct source appears in the search results, on average. Scored 0–1 — higher is better. 1.0 means the right source is always first."
             />
             <MetricCard
               label="nDCG"
               value={summary.ndcg}
               tier={tierForRatio(summary.ndcg)}
               format="ratio"
+              explanation="How well the search ranks the most relevant sources near the top. Scored 0–1 — higher is better."
             />
             <MetricCard
               label="Keyword coverage"
               value={summary.keywordCoverage}
               tier={tierForRatio(summary.keywordCoverage)}
               format="percent"
+              explanation="The share of expected keywords from the reference answer that appear in the retrieved sources. Scored 0–100%."
             />
           </div>
           <CategoryBarChart
