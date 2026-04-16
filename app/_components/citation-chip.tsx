@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { TooltipPortal } from "./tooltip-portal";
 
 export function CitationChip({
   n,
@@ -11,16 +12,23 @@ export function CitationChip({
   excerpt?: string;
   onActivate?: (n: number) => void;
 }): React.JSX.Element {
-  const [hovered, setHovered] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [rect, setRect] = useState<DOMRect | null>(null);
   const text = excerpt ? truncate(excerpt, 400) : null;
+
+  const handleEnter = (): void => {
+    if (buttonRef.current) setRect(buttonRef.current.getBoundingClientRect());
+  };
+  const handleLeave = (): void => setRect(null);
 
   return (
     <span
       className="relative inline-flex"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
     >
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => onActivate?.(n)}
         aria-label={`Open citation ${n}`}
@@ -28,20 +36,26 @@ export function CitationChip({
       >
         {n}
       </button>
-      {hovered && text && (
-        <span
-          role="tooltip"
-          className="tooltip-in pointer-events-none absolute bottom-full left-1/2 z-30 w-[320px] -translate-x-1/2 -translate-y-2 rounded-xl bg-[#1f2a23] px-3.5 py-2.5 text-[12px] leading-relaxed text-white/95 shadow-[0_12px_32px_-8px_rgba(31,42,35,0.4)]"
-        >
-          <span className="mb-1 block text-[9px] uppercase tracking-[0.18em] text-white/55">
-            Citation {n}
-          </span>
-          {text}
+      {rect && text && (
+        <TooltipPortal>
           <span
-            aria-hidden
-            className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#1f2a23]"
-          />
-        </span>
+            role="tooltip"
+            className="tooltip-in pointer-events-none fixed z-[1000] w-[320px] rounded-xl bg-[#1f2a23] px-3.5 py-2.5 text-[12px] leading-relaxed text-white/95 shadow-[0_12px_32px_-8px_rgba(31,42,35,0.4)]"
+            style={{
+              left: rect.left + rect.width / 2,
+              top: rect.top,
+            }}
+          >
+            <span className="mb-1 block text-[9px] uppercase tracking-[0.18em] text-white/55">
+              Citation {n}
+            </span>
+            {text}
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#1f2a23]"
+            />
+          </span>
+        </TooltipPortal>
       )}
     </span>
   );

@@ -24,11 +24,11 @@
 @keyframes tooltipIn {
   0% {
     opacity: 0;
-    transform: translate(-50%, -2px) scale(0.96);
+    transform: translate(-50%, calc(-100% - 2px)) scale(0.96);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -8px) scale(1);
+    transform: translate(-50%, calc(-100% - 8px)) scale(1);
   }
 }
 
