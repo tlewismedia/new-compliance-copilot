@@ -46,7 +46,7 @@ export function QuestionCard({
           onClick={onSubmit}
           disabled={disabled}
           aria-label={loading ? "Thinking" : "Ask"}
-          className="group relative overflow-hidden rounded-xl bg-[#2d4a35] px-5 py-3 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.35)] transition-all hover:bg-[#1f3526] hover:shadow-[0_4px_14px_-2px_rgba(45,74,53,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2d4a35]"
+          className="group relative self-stretch overflow-hidden rounded-xl bg-[#2d4a35] px-5 py-3 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.35)] transition-all hover:bg-[#1f3526] hover:shadow-[0_4px_14px_-2px_rgba(45,74,53,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2d4a35]"
         >
           <span className="relative flex items-center gap-2">
             {loading ? (
