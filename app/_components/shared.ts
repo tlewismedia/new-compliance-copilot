@@ -71,8 +71,8 @@ export function confidenceTier(
 ): ConfidenceTier {
   if (retrievals.length === 0) return "LOW";
   const top = Math.max(...retrievals.map((r) => r.score));
-  if (top >= 0.8) return "HIGH";
-  if (top >= 0.55) return "MEDIUM";
+  if (top >= 0.65) return "HIGH";
+  if (top >= 0.45) return "MEDIUM";
   return "LOW";
 }
 

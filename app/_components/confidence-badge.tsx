@@ -1,7 +1,7 @@
 import { SERIF, CONFIDENCE_COLORS, type ConfidenceTier } from "./shared";
 
 const CONFIDENCE_TOOLTIP =
-  "Based on the semantic similarity score of the best-matching source retrieved for your question. High = score ≥ 0.8, Medium = score ≥ 0.55, Low = score < 0.55.";
+  "Based on the semantic similarity score of the best-matching source retrieved for your question. High = score ≥ 0.65, Medium = score ≥ 0.45, Low = score < 0.45.";
 
 const TIER_LABEL: Record<ConfidenceTier, string> = {
   HIGH: "High",
