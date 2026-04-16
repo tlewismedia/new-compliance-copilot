@@ -9,6 +9,8 @@ import {
 } from "../_components/shared";
 import { Card } from "../_components/card";
 import { QuestionCard } from "../_components/question-card";
+// TEMP_SAMPLE_QUESTIONS: Remove when issue #37 affordance is no longer needed.
+import { SampleQuestions } from "../_components/sample-questions";
 import { AnswerCard } from "../_components/answer-card";
 import { TraceSection } from "../_components/trace-section";
 import { CitationsPanel } from "../_components/citations-panel";
@@ -103,6 +105,9 @@ export function DashboardPage(): React.JSX.Element {
             loading={loading}
             textareaRef={textareaRef}
           />
+
+          {/* TEMP_SAMPLE_QUESTIONS: Remove when issue #37 affordance is no longer needed. */}
+          <SampleQuestions />
 
           {error && (
             <Card className="p-5 text-[13px] text-[#8b3a2f]">{error}</Card>
