@@ -4,8 +4,8 @@
  * For each benchmark item, issues one direct Pinecone top-K query and scores
  * four retrieval metrics from it; the first 5 chunk IDs feed pinpoint@5, and
  * all K chunks feed the keyword metrics. No LLM is involved in the retrieval
- * scoring path. When the judge is enabled (default), the retrieve + generate
- * nodes are run separately to produce an answer for the judge to score.
+ * scoring path. When the judge is enabled (default), the compiled graph is
+ * invoked to produce an answer for the judge to score.
  *
  *   Retrieval metrics (no LLM involved)
  *     - pinpoint_precision@5 : fraction of expected_chunk_ids in the first 5
@@ -40,8 +40,7 @@ import "dotenv/config";
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
-import { createRetrieveNode } from "../pipeline/nodes/retrieve";
-import { createGenerateNode } from "../pipeline/nodes/generate";
+import { graph } from "../pipeline/graph";
 import {
   JUDGE_MODEL,
   RETRIEVAL_K,
@@ -292,11 +291,6 @@ async function main(): Promise<void> {
   const pineconeIndex = createPineconeIndex();
   const openai = createOpenAI();
 
-  // Generation is only used when the judge is enabled, so build the nodes
-  // lazily to keep --skip-judge free of LLM dependencies.
-  const retrieveNode = skipJudge ? null : createRetrieveNode(pineconeIndex);
-  const generateNode = skipJudge ? null : createGenerateNode(openai);
-
   const results: ItemResult[] = [];
 
   for (const [i, item] of items.entries()) {
@@ -321,24 +315,14 @@ async function main(): Promise<void> {
       RETRIEVAL_K,
     );
 
-    // Answer generation + LLM judge (skipped with --skip-judge)
+    // Answer generation via the compiled graph + LLM judge (skipped with
+    // --skip-judge, so the LLM is never invoked on the fast path).
     let answer = "";
     let judge: JudgeResult | undefined;
     if (!skipJudge) {
       try {
-        const retrieved = await retrieveNode!({
-          query: item.query,
-          retrievals: [],
-          answer: undefined,
-          citations: undefined,
-        });
-        const generated = await generateNode!({
-          query: item.query,
-          retrievals: retrieved.retrievals ?? [],
-          answer: undefined,
-          citations: undefined,
-        });
-        answer = generated.answer ?? "";
+        const state = await graph.invoke({ query: item.query });
+        answer = state.answer ?? "";
         judge = await judgeAnswer(openai, item, answer);
       } catch (err) {
         console.log();
