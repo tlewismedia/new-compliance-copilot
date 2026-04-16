@@ -25,7 +25,7 @@
 - query: "When can a broker-dealer skip the locate requirement for a short sale?"
   category: Direct fact
   expected_chunk_ids:
-    - "17-CFR-242.203::(b)(2)::p0"
+    - "17-CFR-242.203::(b)(2)(i)::p0"
   keywords:
     - "bona-fide market making"
     - "market maker"

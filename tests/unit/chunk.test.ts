@@ -260,7 +260,9 @@ interest ahead of the customer's.
 
 ### (2) Care obligation.
 
-The broker-dealer must exercise reasonable diligence, care, and skill.
+The broker-dealer must exercise reasonable diligence, care, and skill to
+understand the potential risks, rewards, and costs associated with the
+recommendation being made to the retail customer.
 
 - (ii) Have a reasonable basis to believe that the recommendation is in the
   best interest of a particular retail customer based on that customer's
@@ -371,5 +373,157 @@ describe("Regulatory mode: MSRB paragraph paths", () => {
     const chunks = chunkDocument(FIXTURE_MSRB, MSRB_METADATA);
     const ids = chunks.map((c) => c.id);
     expect(ids).toContain("MSRB-Rule-G-18::(c)(i)::p0");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regulatory mode: heading-residual drop + small-parent-merge (issue #49)
+// ---------------------------------------------------------------------------
+
+describe("Regulatory mode: drop heading-residual-only frames", () => {
+  const SEC_META: Omit<
+    ChunkMetadata,
+    "headingPath" | "chunkIndex" | "paragraphPath"
+  > = {
+    ...BASE_METADATA,
+    authority: "SEC",
+    citationId: "TEST-DOC",
+  };
+
+  it("does not emit a chunk whose only content is a header residual", () => {
+    // `## (a) Short title.` followed immediately by `### (1) Body…` means the
+    // `(a)` frame contains only the residual `Short title.` — a heading
+    // title with no prose. That frame must be dropped.
+    const fixture = `
+# Section
+
+## (a) Short title.
+
+### (1) Body text for the first sub-paragraph that is long enough to be
+emitted as its own chunk without triggering the small-frame merge rule
+and thus produces a stable chunk id.
+`.trim();
+
+    const chunks = chunkDocument(fixture, SEC_META);
+    const ids = chunks.map((c) => c.id);
+
+    expect(ids).not.toContain("TEST-DOC::(a)::p0");
+    expect(ids).toContain("TEST-DOC::(a)(1)::p0");
+  });
+});
+
+describe("Regulatory mode: merge small parent frames into first child", () => {
+  const SEC_META: Omit<
+    ChunkMetadata,
+    "headingPath" | "chunkIndex" | "paragraphPath"
+  > = {
+    ...BASE_METADATA,
+    authority: "SEC",
+    citationId: "TEST-DOC",
+  };
+
+  it("prepends a small parent frame's prose to the first deeper-level child", () => {
+    // Mirrors Reg SHO `(b)(2)`: an `### (2) Exceptions.` header with a brief
+    // intro sentence under it, followed by bulleted sub-items `(i)`, `(ii)`.
+    // The parent frame body is below SMALL_FRAME_WORDS so it must be merged
+    // into `(i)` (the first child) and NOT emitted as its own chunk. The
+    // sibling `(ii)` receives no merge — only the first child does.
+    const fixture = `
+# Section
+
+## (b) Parent paragraph with more than fifteen words so that it is comfortably
+above the small-frame threshold and gets emitted as its own chunk without
+any special handling.
+
+### (2) Exceptions.
+
+The locate requirement does not apply to:
+
+- (i) Short sales by a broker-dealer in connection with bona-fide market
+  making activity in the security for which the short sale is effected.
+- (ii) Short sales effected by a broker-dealer for an account of a
+  registered market maker on the same bona-fide market-making basis.
+`.trim();
+
+    const chunks = chunkDocument(fixture, SEC_META);
+    const ids = chunks.map((c) => c.id);
+
+    // The small parent frame must NOT be emitted.
+    expect(ids).not.toContain("TEST-DOC::(b)(2)::p0");
+
+    // The first child frame carries the merged intro sentence at its head,
+    // BEFORE its own prose.
+    const firstChild = chunks.find(
+      (c) => c.id === "TEST-DOC::(b)(2)(i)::p0"
+    );
+    expect(firstChild).toBeDefined();
+    const introIdx = firstChild!.text.indexOf(
+      "The locate requirement does not apply to:"
+    );
+    const ownProseIdx = firstChild!.text.indexOf("Short sales by a broker-dealer");
+    expect(introIdx).toBeGreaterThanOrEqual(0);
+    expect(ownProseIdx).toBeGreaterThan(introIdx);
+    // Sanity: the child's own prose is preserved after the merged prefix.
+    expect(firstChild!.text).toContain("bona-fide market");
+
+    // The sibling `(ii)` does NOT receive the merged prefix.
+    const secondChild = chunks.find(
+      (c) => c.id === "TEST-DOC::(b)(2)(ii)::p0"
+    );
+    expect(secondChild).toBeDefined();
+    expect(secondChild!.text).not.toContain(
+      "The locate requirement does not apply to:"
+    );
+  });
+});
+
+describe("Regulatory mode: small frame with no deeper child is emitted as-is", () => {
+  const SEC_META: Omit<
+    ChunkMetadata,
+    "headingPath" | "chunkIndex" | "paragraphPath"
+  > = {
+    ...BASE_METADATA,
+    authority: "SEC",
+    citationId: "TEST-DOC",
+  };
+
+  it("does not merge upward into a same-level sibling", () => {
+    // `(a)` and `(b)` are siblings at the same marker depth. A small `(a)`
+    // frame must NOT be merged into `(b)` — merging is downward (into a
+    // child) only. The small frame is emitted as-is.
+    const fixture = `
+# Section
+
+## (a) Short intro.
+
+Brief sentence with only a few words.
+
+## (b) Sibling paragraph containing enough prose to clear the small-frame
+threshold and be emitted on its own without special handling.
+`.trim();
+
+    const chunks = chunkDocument(fixture, SEC_META);
+    const ids = chunks.map((c) => c.id);
+
+    expect(ids).toContain("TEST-DOC::(a)::p0");
+    expect(ids).toContain("TEST-DOC::(b)::p0");
+
+    // The `(a)` chunk's text still contains its own intro — it has not been
+    // swallowed by `(b)`.
+    const a = chunks.find((c) => c.id === "TEST-DOC::(a)::p0");
+    expect(a).toBeDefined();
+    expect(a!.text).toContain("Brief sentence with only a few words.");
+
+    // And `(b)` does not contain `(a)`'s prose.
+    const b = chunks.find((c) => c.id === "TEST-DOC::(b)::p0");
+    expect(b).toBeDefined();
+    expect(b!.text).not.toContain("Brief sentence with only a few words.");
+  });
+});
+
+describe("Regulatory mode: SMALL_FRAME_WORDS constant", () => {
+  it("is exported with the documented default value", async () => {
+    const mod = await import("../../ingest/chunk");
+    expect(mod.SMALL_FRAME_WORDS).toBe(15);
   });
 });

@@ -35,6 +35,14 @@ const WORDS_PER_TOKEN = 0.75;
 const TARGET_WORDS = Math.round(TARGET_TOKENS * WORDS_PER_TOKEN); // ~375
 const OVERLAP_WORDS = Math.round(OVERLAP_TOKENS * WORDS_PER_TOKEN); // ~38
 
+// Regulatory-mode: a closed paragraph frame whose body has fewer than this
+// many words is merged into the immediately-following child frame (i.e. a
+// frame one level deeper in the paragraph-marker stack) rather than emitted
+// as its own chunk. Frames that are exclusively the residual of a header
+// line (heading title stripped of its marker) are dropped entirely — see
+// `chunkRegulatory`.
+export const SMALL_FRAME_WORDS = 15;
+
 const HEADER_RE = /^(#{1,3})\s+(.+)$/;
 
 // ---------------------------------------------------------------------------
@@ -361,10 +369,19 @@ function stripDetectedMarker(line: string): string {
     .trim();
 }
 
+interface FrameLine {
+  text: string;
+  // `true` iff this line was produced by stripping the paragraph marker
+  // from a Markdown header line (i.e. the heading's title prose). Frames
+  // whose lines are ALL header-residuals contain no real body — they are
+  // just a heading title — and are dropped during emission.
+  fromHeaderResidual: boolean;
+}
+
 interface ParagraphFrame {
   paragraphPath: string; // concatenation of marker stack, e.g. "(a)(2)(ii)"
   headingPath: string;
-  lines: string[];
+  lines: FrameLine[];
 }
 
 function chunkRegulatory(
@@ -376,7 +393,11 @@ function chunkRegulatory(
   const headingStack: string[] = ["", "", ""];
   const markerStack: ParagraphMarker[] = [];
   const frames: ParagraphFrame[] = [];
-  let current: ParagraphFrame = { paragraphPath: "", headingPath: "", lines: [] };
+  let current: ParagraphFrame = {
+    paragraphPath: "",
+    headingPath: "",
+    lines: [],
+  };
 
   function pathFromStack(): string {
     return markerStack.map((m) => m.marker).join("");
@@ -395,7 +416,7 @@ function chunkRegulatory(
   }
 
   function closeFrame(): void {
-    if (current.lines.some((l) => l.trim().length > 0)) {
+    if (current.lines.some((l) => l.text.trim().length > 0)) {
       frames.push(current);
     }
     openFrame();
@@ -433,7 +454,9 @@ function chunkRegulatory(
       // are purely structural — their title is not treated as chunk prose.
       if (headerMarker) {
         const residual = stripDetectedMarker(line);
-        if (residual.length > 0) current.lines.push(residual);
+        if (residual.length > 0) {
+          current.lines.push({ text: residual, fromHeaderResidual: true });
+        }
       }
       continue;
     }
@@ -450,13 +473,69 @@ function chunkRegulatory(
       markerStack.push(marker);
       openFrame();
       const residual = stripDetectedMarker(line);
-      if (residual.length > 0) current.lines.push(residual);
+      if (residual.length > 0) {
+        current.lines.push({ text: residual, fromHeaderResidual: false });
+      }
       continue;
     }
 
-    current.lines.push(line);
+    current.lines.push({ text: line, fromHeaderResidual: false });
   }
   closeFrame();
+
+  // -------------------------------------------------------------------
+  // Post-process: drop header-residual-only frames, merge small parent
+  // frames into the first deeper-level child frame.
+  // -------------------------------------------------------------------
+
+  // Step 1 — drop frames whose only content is the residual of a header
+  // line (a heading title with its marker stripped and no body prose).
+  // These carry no real content and are never useful as retrievals.
+  const afterDrop: ParagraphFrame[] = frames.filter((frame) => {
+    const nonBlank = frame.lines.filter((l) => l.text.trim().length > 0);
+    if (nonBlank.length === 0) return false;
+    // Keep the frame iff at least one non-blank line is body prose rather
+    // than a header residual.
+    return nonBlank.some((l) => !l.fromHeaderResidual);
+  });
+
+  // Step 2 — merge small parent frames forward into the next deeper-level
+  // child frame. A small frame is one whose body has fewer than
+  // SMALL_FRAME_WORDS words. "Deeper-level child" is defined structurally
+  // against the paragraph-marker stack: the next frame must have a strictly
+  // longer `paragraphPath` that starts with the current frame's path, and
+  // the current frame must itself have a non-empty path (otherwise the two
+  // frames are independent heading-scoped siblings, not parent/child).
+  // If the next frame is a sibling, an ancestor, or a heading-scoped peer,
+  // the small frame is emitted as-is — we never merge upward.
+  const mergedFrames: ParagraphFrame[] = [];
+  for (let i = 0; i < afterDrop.length; i++) {
+    const frame = afterDrop[i];
+    const frameText = frame.lines.map((l) => l.text).join("\n").trim();
+    const frameWords = wordCount(frameText);
+    const next = afterDrop[i + 1];
+
+    const isSmall = frameWords > 0 && frameWords < SMALL_FRAME_WORDS;
+    const nextIsChild =
+      next !== undefined &&
+      frame.paragraphPath.length > 0 &&
+      next.paragraphPath.length > frame.paragraphPath.length &&
+      next.paragraphPath.startsWith(frame.paragraphPath);
+
+    if (isSmall && nextIsChild) {
+      // Prepend this frame's text to the next child frame, keeping the
+      // child's provenance flags intact. The prepended line is marked as
+      // body prose (not header-residual) so it cannot cause the combined
+      // frame to be dropped by Step 1 semantics on a later pass.
+      next.lines = [
+        { text: frameText, fromHeaderResidual: false },
+        ...next.lines,
+      ];
+      continue; // do not emit the small parent frame itself
+    }
+
+    mergedFrames.push(frame);
+  }
 
   // Convert frames to chunks. A frame may produce multiple chunks if its
   // prose exceeds the target-token budget; suffix with `p${N}` in order.
@@ -472,14 +551,14 @@ function chunkRegulatory(
   // Resolve a slug once per frame so all chunks in the same frame share a
   // base ID, disambiguated by ::p0, ::p1, ….
   const slugByFrame = new Map<ParagraphFrame, string>();
-  for (const frame of frames) {
+  for (const frame of mergedFrames) {
     if (frame.paragraphPath.length === 0) {
       slugByFrame.set(frame, resolveSlug(frame.headingPath, slugCounts));
     }
   }
 
-  for (const frame of frames) {
-    const text = frame.lines.join("\n").trim();
+  for (const frame of mergedFrames) {
+    const text = frame.lines.map((l) => l.text).join("\n").trim();
     if (text.length === 0) continue;
 
     const sentences = splitSentences(text);

@@ -97,6 +97,27 @@ Within either mode, a frame whose prose exceeds the target token budget
 is split across multiple chunks via the sentence packer with ~50-token
 overlap between adjacent chunks.
 
+**Small-frame merge + heading-residual drop (regulatory mode only).** The
+CFR pattern of an intro sentence under a header-with-marker followed by
+bulleted sub-items was producing near-empty chunks at the parent level
+(e.g. `(b)(2)` → `"Exceptions. The locate requirement does not apply to:"`)
+and heading-title-only chunks where a header line's marker had no body
+before the next sub-marker (e.g. `(b)` → `"Locate" requirement for short sales.`).
+After frame collection, `chunkRegulatory` post-processes the frame list:
+
+1. **Drop** frames whose only non-blank content is the residual extracted
+   from a header line — these carry a heading title and no prose.
+2. **Merge** frames whose body has fewer than `SMALL_FRAME_WORDS` (default
+   `15`) words into the immediately-following deeper-level child frame
+   (i.e. a frame whose `paragraphPath` strictly extends the current
+   frame's). The parent text is prepended to the child's first chunk; the
+   small parent is not emitted as its own chunk. Merging is downward only
+   — a small frame followed by a same-level sibling or shallower ancestor
+   is emitted as-is. Only the _first_ child receives the merged prefix.
+
+Both transformations are internal to regulatory mode; fallback-mode chunk
+IDs and emission are unaffected.
+
 **Token heuristic:** `1 token ≈ 0.75 words` → target word budget = 375 words, overlap = 38 words.
 
 **Citation protection:** sentence splitter guards against splitting on `.` preceded by a digit or uppercase letter, preserving strings like `17 CFR 240.15l-1` and `U.S.C.` within a single chunk.
