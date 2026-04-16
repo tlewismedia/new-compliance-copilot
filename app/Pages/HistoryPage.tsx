@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "../_components/card";
-import { SERIF, confidenceTier } from "../_components/shared";
-import { AnswerCard } from "../_components/answer-card";
+import { SERIF } from "../_components/shared";
+import { HistoryChunk } from "../_components/history-chunk";
 import {
   loadHistory,
   type HistoryEntry,
@@ -56,48 +56,20 @@ export function HistoryPage(): React.JSX.Element {
       )}
 
       {entries.length > 0 && (
-        <div className="space-y-6">
-          {entries.map((entry) => (
-            <HistoryItem key={entry.id} entry={entry} />
+        <div>
+          {entries.map((entry, index) => (
+            <Fragment key={entry.id}>
+              {index > 0 && (
+                <hr
+                  className="my-10 border-t border-[#2d4a35]/10 md:my-12"
+                  aria-hidden
+                />
+              )}
+              <HistoryChunk entry={entry} />
+            </Fragment>
           ))}
         </div>
       )}
     </main>
   );
-}
-
-function HistoryItem({ entry }: { entry: HistoryEntry }): React.JSX.Element {
-  const tier = confidenceTier(entry.response.retrievals);
-  const formattedDate = formatAskedAt(entry.askedAt);
-  return (
-    <div className="space-y-3">
-      <Card className="p-6">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-[#6b7a70]">
-          {formattedDate}
-        </div>
-        <p
-          className="mt-3 text-[18px] leading-[1.5] text-[#1f2a23]"
-          style={SERIF}
-        >
-          {entry.query}
-        </p>
-      </Card>
-      <AnswerCard
-        answer={entry.response.answer}
-        citations={entry.response.citations}
-        retrievals={entry.response.retrievals}
-        tier={tier}
-        onCitationClick={undefined}
-      />
-    </div>
-  );
-}
-
-function formatAskedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 }
