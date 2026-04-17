@@ -81,18 +81,21 @@ export function AnswerEvaluation(): React.JSX.Element {
               tier={tierForJudge(summary.accuracy)}
               format="judge"
               hint={`Across ${summary.total} items`}
+              explanation="How factually correct the answer is, judged by an LLM on a 1–5 scale. Higher is better."
             />
             <MetricCard
               label="Completeness"
               value={summary.completeness}
               tier={tierForJudge(summary.completeness)}
               format="judge"
+              explanation="How thoroughly the answer covers what was asked, judged by an LLM on a 1–5 scale."
             />
             <MetricCard
               label="Relevance"
               value={summary.relevance}
               tier={tierForJudge(summary.relevance)}
               format="judge"
+              explanation="How closely the answer sticks to the question, judged by an LLM on a 1–5 scale."
             />
           </div>
           <CategoryBarChart

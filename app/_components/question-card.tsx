@@ -38,7 +38,7 @@ export function QuestionCard({
             disabled={loading}
             rows={1}
             placeholder="e.g. What are baseline requirements for cyber incident detection?"
-            className="h-10 w-full resize-none rounded-xl border border-[#2d4a35]/10 bg-white px-4 py-0 text-[15px] leading-[2.5rem] text-[#1f2a23] placeholder-[#a0a9a4] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_1px_0_0_rgba(45,74,53,0.04)] focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40 disabled:cursor-not-allowed disabled:opacity-60"
+            className="block h-10 w-full resize-none rounded-xl border border-[#2d4a35]/10 bg-white px-4 py-0 align-middle text-[15px] leading-10 text-[#1f2a23] placeholder-[#a0a9a4] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_1px_0_0_rgba(45,74,53,0.04)] focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <button

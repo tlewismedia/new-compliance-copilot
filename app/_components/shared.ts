@@ -71,10 +71,42 @@ export function confidenceTier(
 ): ConfidenceTier {
   if (retrievals.length === 0) return "LOW";
   const top = Math.max(...retrievals.map((r) => r.score));
-  if (top >= 0.8) return "HIGH";
-  if (top >= 0.55) return "MEDIUM";
+  if (top >= 0.65) return "HIGH";
+  if (top >= 0.45) return "MEDIUM";
   return "LOW";
 }
+
+export interface ConfidenceColor {
+  readonly bg: string;
+  readonly ring: string;
+  readonly text: string;
+  readonly iconBg: string;
+  readonly iconStroke: string;
+}
+
+export const CONFIDENCE_COLORS: Record<ConfidenceTier, ConfidenceColor> = {
+  HIGH: {
+    bg: "bg-[#dfeee3]/70",
+    ring: "ring-[#9cc9a9]/40",
+    text: "text-[#2d4a35]",
+    iconBg: "ring-[#9cc9a9]/50",
+    iconStroke: "#2d4a35",
+  },
+  MEDIUM: {
+    bg: "bg-[#f4ecc9]/70",
+    ring: "ring-[#d9c97a]/40",
+    text: "text-[#6b5a20]",
+    iconBg: "ring-[#d9c97a]/50",
+    iconStroke: "#6b5a20",
+  },
+  LOW: {
+    bg: "bg-[#fde4d4]/70",
+    ring: "ring-[#fab89a]/40",
+    text: "text-[#8b4a2f]",
+    iconBg: "ring-[#fab89a]/50",
+    iconStroke: "#8b4a2f",
+  },
+};
 
 // ── answer parsing ────────────────────────────────────────────────────────
 // Generator emits [^N] markers (see pipeline/nodes/generate.ts).
