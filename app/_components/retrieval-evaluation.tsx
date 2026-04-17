@@ -44,8 +44,13 @@ export function RetrievalEvaluation(): React.JSX.Element {
           return;
         }
         const item = record as unknown as RetrievalStreamItem;
-        if (typeof item.index === "number" && typeof item.total === "number") {
-          setProgress({ index: item.index, total: item.total });
+        if (typeof item.total === "number") {
+          // Server fires Pinecone queries in parallel, so item.index arrives
+          // out of order. Count completions locally for a monotonic counter.
+          setProgress((prev) => ({
+            index: (prev?.index ?? 0) + 1,
+            total: item.total,
+          }));
         }
       });
     } catch (err) {

@@ -61,45 +61,44 @@ export async function POST(): Promise<Response> {
       }> = [];
 
       try {
-        for (let i = 0; i < loadedItems.length; i++) {
-          const item = loadedItems[i];
+        // Fire all Pinecone queries in parallel and stream each item's
+        // metrics as soon as its query resolves. Scoring is pure JS, so
+        // the only wait per item is the network round-trip — running them
+        // concurrently cuts total time from ~15s to ~1s for 30 items.
+        await Promise.all(
+          loadedItems.map(async (item, i) => {
+            const topK = await retrieveForEval(index, item.query, RETRIEVAL_K);
+            const topFiveIds = topK.slice(0, 5).map((c) => c.chunkId);
+            const { pinpointPrecision } = scorePinpoint(
+              topFiveIds,
+              item.expected_chunk_ids,
+            );
+            const { mrr, ndcg, keywordCoverage } = scoreKeywordMetrics(
+              item.keywords,
+              topK,
+              RETRIEVAL_K,
+            );
 
-          // One direct Pinecone call provides chunks for both metrics:
-          // the first 5 IDs feed pinpoint_precision@5; all K feed the
-          // keyword-based retrieval metrics. The graph (which would also
-          // invoke the LLM) is not needed here.
-          const topK = await retrieveForEval(index, item.query, RETRIEVAL_K);
-          const topFiveIds = topK.slice(0, 5).map((c) => c.chunkId);
-          const { pinpointPrecision } = scorePinpoint(
-            topFiveIds,
-            item.expected_chunk_ids,
-          );
+            perItem.push({
+              category: item.category,
+              mrr,
+              ndcg,
+              keywordCoverage,
+              pinpointPrecision,
+            });
 
-          const { mrr, ndcg, keywordCoverage } = scoreKeywordMetrics(
-            item.keywords,
-            topK,
-            RETRIEVAL_K,
-          );
-
-          perItem.push({
-            category: item.category,
-            mrr,
-            ndcg,
-            keywordCoverage,
-            pinpointPrecision,
-          });
-
-          write({
-            index: i + 1,
-            total,
-            query: item.query,
-            category: item.category,
-            pinpointPrecision,
-            mrr,
-            ndcg,
-            keywordCoverage,
-          });
-        }
+            write({
+              index: i + 1,
+              total,
+              query: item.query,
+              category: item.category,
+              pinpointPrecision,
+              mrr,
+              ndcg,
+              keywordCoverage,
+            });
+          }),
+        );
 
         const avg = (xs: number[]) =>
           xs.length === 0 ? 0 : xs.reduce((s, x) => s + x, 0) / xs.length;
