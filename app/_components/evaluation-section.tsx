@@ -1,12 +1,12 @@
 import { Card } from "./card";
 import { RunEvaluationButton } from "./run-evaluation-button";
-import { SERIF } from "./shared";
+import { LOGO_FONT } from "./shared";
 
 /**
  * Generic /evaluations section wrapper: title, description, run-button, and
  * a slot for the pre-run hint or the rendered results. Matches the two-card
  * stacked layout from the Gradio prototype but styled with the app theme
- * (muted greens/creams, Card, SERIF title).
+ * (muted greens/creams, Card, LOGO_FONT title).
  *
  * When `runDisabled` is set (e.g. while viewing a saved report), the run
  * button is rendered in a disabled state with a tooltip and the click
@@ -42,7 +42,7 @@ export function EvaluationSection({
           <div>
             <h2
               className="text-[20px] tracking-tight text-[#1f2a23]"
-              style={SERIF}
+              style={LOGO_FONT}
             >
               {title}
             </h2>

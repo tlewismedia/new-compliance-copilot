@@ -1,5 +1,5 @@
 import { Card } from "./card";
-import { SERIF, confidenceTier } from "./shared";
+import { LOGO_FONT, confidenceTier } from "./shared";
 import { AnswerCard } from "./answer-card";
 import type { HistoryEntry } from "./history-store";
 
@@ -18,7 +18,7 @@ export function HistoryChunk({
         </div>
         <p
           className="mt-3 text-[18px] leading-[1.5] text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           {entry.query}
         </p>

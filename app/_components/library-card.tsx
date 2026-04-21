@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card } from "./card";
-import { SERIF, authorityStyle, type Authority } from "./shared";
+import { LOGO_FONT, authorityStyle, type Authority } from "./shared";
 import type { CorpusDoc } from "../_lib/corpus";
 
 const SNIPPET_MAX_CHARS = 180;
@@ -44,7 +44,7 @@ export function LibraryCard({ doc }: { doc: CorpusDoc }): React.JSX.Element {
 
         <h2
           className="mt-2 line-clamp-2 text-[16px] leading-snug tracking-tight text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           {doc.title}
         </h2>

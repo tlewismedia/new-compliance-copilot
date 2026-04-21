@@ -1,4 +1,4 @@
-import { SERIF, CONFIDENCE_COLORS, type ConfidenceTier } from "./shared";
+import { LOGO_FONT, CONFIDENCE_COLORS, type ConfidenceTier } from "./shared";
 
 const CONFIDENCE_TOOLTIP =
   "Based on the semantic similarity score of the best-matching source retrieved for your question. High = score ≥ 0.65, Medium = score ≥ 0.45, Low = score < 0.45.";
@@ -84,7 +84,7 @@ export function ConfidenceBadge({
           <span className={`text-[9px] ${color.text}`}>·</span>
           <span
             className={`text-[13px] leading-none tracking-tight ${color.text}`}
-            style={SERIF}
+            style={LOGO_FONT}
           >
             {label}
           </span>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Citation, Retrieval } from "../../shared/types";
 import { Card } from "./card";
 import {
-  SERIF,
+  LOGO_FONT,
   type ConfidenceTier,
   type RunMeta,
   RETRIEVE_THRESHOLD,
@@ -57,7 +57,7 @@ export function TraceSection({
           </span>
           <span
             className="text-[20px] tracking-tight text-[#1f2a23]"
-            style={SERIF}
+            style={LOGO_FONT}
           >
             Trace
           </span>
