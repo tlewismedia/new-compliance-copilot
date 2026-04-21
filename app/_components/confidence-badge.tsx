@@ -70,24 +70,25 @@ export function ConfidenceBadge({
       <div
         className={`flex items-center gap-3 rounded-2xl px-3.5 py-2 ring-1 ${color.bg} ${color.ring}`}
       >
-        <div className="flex flex-col items-end leading-none">
-          <span
-            className={`text-[9px] uppercase tracking-[0.2em] ${color.text}`}
-          >
-            Confidence
-          </span>
-          <span
-            className={`mt-1 text-[18px] leading-none tracking-tight ${color.text}`}
-            style={SERIF}
-          >
-            {label}
-          </span>
-        </div>
         <div
           className={`flex h-7 w-7 items-center justify-center rounded-full bg-white ring-1 ${color.iconBg}`}
         >
           <TierIcon tier={tier} stroke={color.iconStroke} />
         </div>
+        <span className="inline-flex items-baseline gap-1.5">
+          <span
+            className={`text-[9px] uppercase tracking-[0.2em] ${color.text}`}
+          >
+            Confidence
+          </span>
+          <span className={`text-[9px] ${color.text}`}>·</span>
+          <span
+            className={`text-[13px] leading-none tracking-tight ${color.text}`}
+            style={SERIF}
+          >
+            {label}
+          </span>
+        </span>
       </div>
       <div
         role="tooltip"
