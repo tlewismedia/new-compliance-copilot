@@ -169,18 +169,24 @@ function TraceNode({
   );
 }
 
+// Visual-center offset: the arrow glyph's ink is geometrically centerable in
+// its 10×10 viewBox, but the arrowhead (dense stroke convergence in the lower
+// half) carries more visual weight than the thin upper shaft. If we center the
+// path geometrically (top/bottom padding 1.25u each), the glyph's visual
+// center of mass sits BELOW y=5 and the arrow reads as floating high relative
+// to the flanking lines. To compensate, we shift the path upward inside the
+// viewBox — shaft y=0.5→8.0, arrowhead apex at y=4.5 — so the top padding is
+// small (0.5u) and the bottom padding is larger (2.0u). The extra whitespace
+// below the arrowhead balances its visual heft, placing the perceived center
+// at ~y=5 between the h-3 flanking lines.
 function TraceConnector(): React.JSX.Element {
-  // Arrow glyph is 7.5 units tall (shaft y=1.25→8.75) inside a 10×10 viewBox,
-  // giving 1.25u of padding on top and bottom so the glyph is centered in its
-  // SVG box. With equal h-3 flanking lines and matching gap-0.5 gaps, the
-  // overall column is symmetric around the arrow glyph.
   return (
     <div className="flex py-1 pl-[33px]">
       <div className="flex flex-col items-center gap-0.5">
         <div className="h-3 w-px bg-[#9cc9a9]/60" />
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
           <path
-            d="M5 1.25V8.75M5 8.75L1.5 5.25M5 8.75L8.5 5.25"
+            d="M5 0.5V8M5 8L1.5 4.5M5 8L8.5 4.5"
             stroke="#6ea580"
             strokeWidth="1.2"
             strokeLinecap="round"
