@@ -36,7 +36,7 @@ export function RunEvaluationButton({
         aria-busy={busy}
         aria-label={busy ? progressText : idleLabel}
         title={!busy && disabled ? disabledReason : undefined}
-        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-[#2d4a35] px-5 py-2.5 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.35)] transition-all hover:bg-[#1f3526] hover:shadow-[0_4px_14px_-2px_rgba(45,74,53,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#2d4a35]"
+        className="group relative inline-flex h-10 shrink-0 items-center gap-2 overflow-hidden rounded-xl bg-[#0e6d6b] px-5 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(14,109,107,0.35)] transition-all hover:bg-[#0a5754] hover:shadow-[0_4px_14px_-2px_rgba(14,109,107,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#0e6d6b]"
       >
         {busy ? <Spinner /> : null}
         <span>{busy ? "Evaluating…" : idleLabel}</span>

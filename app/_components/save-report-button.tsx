@@ -34,7 +34,7 @@ export function SaveReportButton({
           ? "Run at least one evaluation to save a report"
           : undefined
       }
-      className="inline-flex items-center gap-2 rounded-xl border border-[#2d4a35]/30 bg-white/80 px-4 py-1.5 text-[13px] font-medium text-[#2d4a35] shadow-sm transition-colors hover:bg-[#dfeee3]/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white/80"
+      className="group relative inline-flex h-10 shrink-0 items-center gap-2 overflow-hidden rounded-xl bg-[#0e6d6b] px-5 text-[13px] font-medium text-white shadow-[0_2px_8px_-2px_rgba(14,109,107,0.35)] transition-all hover:bg-[#0a5754] hover:shadow-[0_4px_14px_-2px_rgba(14,109,107,0.45)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#0e6d6b]"
     >
       {label}
     </button>
