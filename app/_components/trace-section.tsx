@@ -31,7 +31,7 @@ export function TraceSection({
 
   return (
     <div className="pt-2" data-testid="trace">
-      <div className="mb-4 flex flex-wrap items-center gap-4">
+      <div className="mb-1 flex flex-wrap items-center gap-4">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -83,7 +83,21 @@ export function TraceSection({
             : "grid-rows-[0fr] opacity-0"
         }`}
       >
-        <div className="overflow-hidden">
+        {/*
+          The overflow-hidden is needed so the grid-rows collapse animation
+          clips content during the 0fr ↔ 1fr transition, but it also clips
+          the <Card> shadows of the trace nodes. To let the full shadow
+          render while still clipping the height animation, pad the inside
+          of the clip region by enough to fit the shadow (see Card's shadow
+          tokens: blur 32 / y-offset 12 / spread -8 → ~36px below, ~24px
+          on the sides, ~12px above). The horizontal padding is offset with
+          matching negative x-margins so the card width stays equal to the
+          parent section width; the bottom padding is offset with a negative
+          margin since no content follows; the top padding replaces space
+          removed from the Trace header's mb (mb-4 → mb-1) so the overall
+          gap between the Trace header and the first node is preserved.
+        */}
+        <div className="-mx-6 -mb-10 overflow-hidden px-6 pb-10 pt-3">
           <div className="space-y-0">
             <TraceNode label="Query" accent="sage" duration={null}>
               <QueryNodeContent query={query} />
