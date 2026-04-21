@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card } from "../_components/card";
 import { Markdown } from "../_components/markdown";
-import { SERIF, authorityStyle, type Authority } from "../_components/shared";
+import { LOGO_FONT, authorityStyle, type Authority } from "../_components/shared";
 import type { CorpusDoc } from "../_lib/corpus";
 
 function isExternalUrl(url: string): boolean {
@@ -39,7 +39,7 @@ export function LibraryDetailPage({
       <div className="mb-6">
         <h1
           className="text-[28px] leading-tight tracking-tight text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           {doc.title}
         </h1>

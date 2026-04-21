@@ -1,4 +1,4 @@
-import { SERIF } from "../_components/shared";
+import { LOGO_FONT } from "../_components/shared";
 import { LibraryCard } from "../_components/library-card";
 import { loadCorpusDocs } from "../_lib/corpus";
 
@@ -10,7 +10,7 @@ export function LibraryPage(): React.JSX.Element {
       <div className="mb-6">
         <h1
           className="text-[28px] tracking-tight text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           Library
         </h1>

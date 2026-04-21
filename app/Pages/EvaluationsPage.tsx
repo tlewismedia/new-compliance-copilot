@@ -5,7 +5,7 @@ import { AnswerEvaluation } from "../_components/answer-evaluation";
 import { ReportSelector } from "../_components/report-selector";
 import { RetrievalEvaluation } from "../_components/retrieval-evaluation";
 import { SaveReportButton } from "../_components/save-report-button";
-import { SERIF } from "../_components/shared";
+import { LOGO_FONT } from "../_components/shared";
 import { streamNdjson } from "../_components/ndjson-stream";
 import {
   selectEvaluationView,
@@ -228,7 +228,7 @@ export function EvaluationsPage(): React.JSX.Element {
       <div className="mb-6">
         <h1
           className="text-[28px] tracking-tight text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           Evaluations
         </h1>

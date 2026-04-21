@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "../_components/card";
-import { SERIF } from "../_components/shared";
+import { LOGO_FONT } from "../_components/shared";
 import { HistoryChunk } from "../_components/history-chunk";
 import {
   loadHistory,
@@ -31,7 +31,7 @@ export function HistoryPage(): React.JSX.Element {
       <div className="mb-6">
         <h1
           className="text-[28px] tracking-tight text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           History
         </h1>
