@@ -5,6 +5,10 @@ import { AnswerEvaluation } from "../_components/answer-evaluation";
 import { ReportSelector } from "../_components/report-selector";
 import { RetrievalEvaluation } from "../_components/retrieval-evaluation";
 import { SaveReportButton } from "../_components/save-report-button";
+import {
+  justSavedOnRunStart,
+  justSavedOnSaveComplete,
+} from "../_components/save-report-state";
 import { LOGO_FONT } from "../_components/shared";
 import { streamNdjson } from "../_components/ndjson-stream";
 import {
@@ -60,6 +64,12 @@ export function EvaluationsPage(): React.JSX.Element {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // `justSaved` is the confirmation flag powering the "Report Saved" button
+  // state. It flips true at the end of a successful POST and flips false the
+  // moment the user kicks off a new retrieval or answer run — that way the
+  // confirmation is tied to the exact payload that was saved, and any new
+  // run (which produces a new summary) re-enables the button.
+  const [justSaved, setJustSaved] = useState(false);
 
   // Fetch the saved-report list on mount so the dropdown is populated.
   useEffect(() => {
@@ -117,6 +127,9 @@ export function EvaluationsPage(): React.JSX.Element {
     setRetrievalError(null);
     setRetrievalSummary(null);
     setRetrievalProgress(null);
+    // A new run invalidates the previous save confirmation — the resulting
+    // summary is different from whatever was persisted.
+    setJustSaved(justSavedOnRunStart());
     try {
       await streamNdjson("/api/evaluations/retrieval", (obj) => {
         const record = obj as Record<string, unknown>;
@@ -151,6 +164,9 @@ export function EvaluationsPage(): React.JSX.Element {
     setAnswerError(null);
     setAnswerSummary(null);
     setAnswerProgress(null);
+    // A new run invalidates the previous save confirmation — the resulting
+    // summary is different from whatever was persisted.
+    setJustSaved(justSavedOnRunStart());
     try {
       await streamNdjson("/api/evaluations/answer", (obj) => {
         const record = obj as Record<string, unknown>;
@@ -200,8 +216,12 @@ export function EvaluationsPage(): React.JSX.Element {
       }
       const meta = (await res.json()) as SavedReportMeta;
       setSavedReports((prev) => [meta, ...prev]);
+      // Success path: flip the button into its "Report Saved" confirmation
+      // state. This only runs if the POST returned ok and parsed cleanly.
+      setJustSaved(justSavedOnSaveComplete(true));
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed.");
+      setJustSaved(justSavedOnSaveComplete(false));
     } finally {
       setSaving(false);
     }
@@ -248,6 +268,7 @@ export function EvaluationsPage(): React.JSX.Element {
             onClick={() => void handleSave()}
             disabled={!hasAnyLiveSummary}
             saving={saving}
+            saved={justSaved}
           />
         )}
       </div>
