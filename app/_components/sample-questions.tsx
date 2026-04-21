@@ -3,7 +3,7 @@
 // Grep for `TEMP_SAMPLE_QUESTIONS` to find all references.
 "use client";
 
-import { Card } from "./card";
+import { useState } from "react";
 
 const TEMP_SAMPLE_QUESTIONS: ReadonlyArray<{
   topic: string;
@@ -41,33 +41,70 @@ export function SampleQuestions({
 }: {
   onSelect: (question: string) => void;
 }): React.JSX.Element {
+  const [i, setI] = useState(0);
+  const total = TEMP_SAMPLE_QUESTIONS.length;
+  const current = TEMP_SAMPLE_QUESTIONS[i];
+
+  function goPrev() {
+    setI((prev) => (prev === 0 ? total - 1 : prev - 1));
+  }
+
+  function goNext() {
+    setI((prev) => (prev === total - 1 ? 0 : prev + 1));
+  }
+
   return (
-    <Card className="p-5" data-testid="sample-questions">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-[#6b7a70]">
-          Sample Questions
+    <div
+      className="flex items-center gap-2"
+      data-testid="sample-questions"
+    >
+      <button
+        type="button"
+        onClick={goPrev}
+        aria-label="Previous sample question"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#6b7a70] transition-all hover:-translate-y-px hover:bg-white/70 hover:text-[#2d4a35] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+          <path
+            d="M7.5 3L4.5 6L7.5 9"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onSelect(current.question)}
+        aria-label={`Use sample question for ${current.topic}`}
+        className="group flex min-w-0 flex-1 items-start gap-3 rounded-xl border border-[#2d4a35]/10 bg-white/60 px-4 py-3 text-left transition-all hover:border-[#6ea580]/40 hover:bg-white focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
+      >
+        <span className="mt-0.5 shrink-0 rounded-full bg-[#2d4a35]/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[#2d4a35]">
+          {current.topic}
         </span>
-        <span className="text-[11px] text-[#8a968f]">Click to use</span>
-      </div>
-      <ul className="mt-3 grid gap-2">
-        {TEMP_SAMPLE_QUESTIONS.map((item) => (
-          <li key={item.topic}>
-            <button
-              type="button"
-              onClick={() => onSelect(item.question)}
-              aria-label={`Use sample question for ${item.topic}`}
-              className="group flex w-full items-start gap-3 rounded-xl border border-[#2d4a35]/10 bg-white/70 px-4 py-3 text-left transition-all hover:border-[#6ea580]/40 hover:bg-white focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
-            >
-              <span className="mt-0.5 shrink-0 rounded-full bg-[#2d4a35]/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[#2d4a35]">
-                {item.topic}
-              </span>
-              <span className="min-w-0 flex-1 text-[13px] leading-relaxed text-[#1f2a23]">
-                {item.question}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </Card>
+        <span className="min-w-0 flex-1 text-[13px] leading-relaxed text-[#1f2a23]">
+          {current.question}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={goNext}
+        aria-label="Next sample question"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#6b7a70] transition-all hover:-translate-y-px hover:bg-white/70 hover:text-[#2d4a35] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+          <path
+            d="M4.5 3L7.5 6L4.5 9"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
   );
 }
