@@ -79,12 +79,9 @@ export function SampleQuestions({
         type="button"
         onClick={() => onSelect(current.question)}
         aria-label={`Use sample question for ${current.topic}`}
-        className="group flex min-w-0 flex-1 items-start gap-3 rounded-xl border border-[#2d4a35]/10 bg-white/60 px-4 py-3 text-left transition-all hover:border-[#6ea580]/40 hover:bg-white focus:border-[#6ea580] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
+        className="group flex min-w-0 flex-1 items-center justify-center text-center transition-colors hover:text-[#2d4a35] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
       >
-        <span className="mt-0.5 shrink-0 rounded-full bg-[#2d4a35]/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[#2d4a35]">
-          {current.topic}
-        </span>
-        <span className="min-w-0 flex-1 text-[13px] leading-relaxed text-[#1f2a23]">
+        <span className="min-w-0 flex-1 text-center text-[13px] leading-relaxed text-[#1f2a23]">
           {current.question}
         </span>
       </button>
