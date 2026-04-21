@@ -1,5 +1,3 @@
-import { Card } from "./card";
-
 export function QuestionCard({
   query,
   setQuery,
@@ -17,7 +15,7 @@ export function QuestionCard({
 }): React.JSX.Element {
   const disabled = loading || query.trim().length === 0;
   return (
-    <Card className="p-6" data-testid="question-card">
+    <div data-testid="question-card">
       <div className="flex items-center justify-between">
         <label
           htmlFor="question-input"
@@ -71,7 +69,7 @@ export function QuestionCard({
           </span>
         </button>
       </div>
-    </Card>
+    </div>
   );
 }
 
