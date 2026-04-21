@@ -24,14 +24,12 @@ export function Sidebar(): React.JSX.Element {
         aria-label="Starling Data"
         className="flex items-center gap-3 px-2 pb-6"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.12)] ring-1 ring-[#9cc9a9]/30">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/starlinglogo.svg"
-            alt=""
-            className="h-6 w-6 object-contain"
-          />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/starlinglogo.svg"
+          alt=""
+          className="h-9 w-9 object-contain"
+        />
         <span
           className="text-[17px] tracking-tight text-[#1f2a23]"
           style={LOGO_FONT}
