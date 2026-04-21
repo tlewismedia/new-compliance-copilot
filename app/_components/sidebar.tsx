@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LeafMark } from "./leaf-mark";
-import { SERIF } from "./shared";
+import { LOGO_FONT } from "./shared";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: DashboardIcon },
@@ -26,7 +26,7 @@ export function Sidebar(): React.JSX.Element {
         </div>
         <span
           className="text-[17px] tracking-tight text-[#1f2a23]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           Copilot
         </span>

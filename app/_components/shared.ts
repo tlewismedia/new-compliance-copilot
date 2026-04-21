@@ -3,6 +3,7 @@ import type { Citation, ChunkMetadata, Retrieval } from "../../shared/types";
 // ── visual tokens ─────────────────────────────────────────────────────────
 
 export const SERIF = { fontFamily: "var(--font-serif)" };
+export const LOGO_FONT = { fontFamily: "var(--font-logo)" };
 
 // ── authority styles ──────────────────────────────────────────────────────
 
