@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LeafMark } from "./leaf-mark";
+import { StarlingMark } from "./starling-mark";
 import { LOGO_FONT } from "./shared";
 
 const NAV_ITEMS = [
@@ -20,9 +20,13 @@ export function Sidebar(): React.JSX.Element {
       aria-label="Primary"
       className="sticky top-0 flex h-screen w-[220px] shrink-0 flex-col border-r border-[#2d4a35]/[0.08] bg-white/60 px-4 py-6 backdrop-blur-md"
     >
-      <Link href="/" className="flex items-center gap-3 px-2 pb-6">
+      <Link
+        href="/"
+        aria-label="Starling Data"
+        className="flex items-center gap-3 px-2 pb-6"
+      >
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-[0_2px_8px_-2px_rgba(45,74,53,0.12)] ring-1 ring-[#9cc9a9]/30">
-          <LeafMark />
+          <StarlingMark />
         </div>
         <span
           className="text-[17px] tracking-tight text-[#1f2a23]"
