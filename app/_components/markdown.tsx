@@ -1,4 +1,4 @@
-import { SERIF } from "./shared";
+import { LOGO_FONT } from "./shared";
 
 /**
  * Minimal server-side markdown renderer.
@@ -22,7 +22,7 @@ export function Markdown({ source }: { source: string }): React.JSX.Element {
             <h1
               key={i}
               className="mt-2 text-[26px] leading-tight tracking-tight text-[#1f2a23]"
-              style={SERIF}
+              style={LOGO_FONT}
             >
               {block.slice(2)}
             </h1>
@@ -33,7 +33,7 @@ export function Markdown({ source }: { source: string }): React.JSX.Element {
             <h2
               key={i}
               className="mb-2 mt-6 text-[20px] leading-tight tracking-tight text-[#1f2a23]"
-              style={SERIF}
+              style={LOGO_FONT}
             >
               {block.slice(3)}
             </h2>

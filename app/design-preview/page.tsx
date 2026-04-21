@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Inter } from "next/font/google";
+import { LOGO_FONT } from "../_components/shared";
 
-const geist = Geist({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   weight: ["300", "400", "500", "600"],
-});
-const serif = Instrument_Serif({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-serif",
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -164,8 +159,6 @@ const AUTHORITY_STYLES: Record<
   },
 };
 
-const SERIF = { fontFamily: "var(--font-serif)" };
-
 const CARD =
   "rounded-2xl bg-white/80 backdrop-blur-md ring-1 ring-[#2d4a35]/[0.08] shadow-[0_2px_8px_-2px_rgba(45,74,53,0.06),0_12px_32px_-8px_rgba(45,74,53,0.08)]";
 
@@ -174,7 +167,7 @@ const CARD =
 export default function DesignPreview(): React.JSX.Element {
   return (
     <div
-      className={`${geist.variable} ${serif.variable} relative min-h-screen overflow-x-hidden text-[#2a2f2c]`}
+      className={`${inter.variable} relative min-h-screen overflow-x-hidden text-[#2a2f2c]`}
       style={{ fontFamily: "var(--font-sans)" }}
     >
       <BackgroundLayers />
@@ -249,7 +242,7 @@ function Header(): React.JSX.Element {
         <div className="flex flex-col leading-none">
           <span
             className="text-[19px] tracking-tight text-[#1f2a23]"
-            style={SERIF}
+            style={LOGO_FONT}
           >
             Compliance Copilot
           </span>
@@ -397,7 +390,7 @@ function ConfidenceBadge(): React.JSX.Element {
         </span>
         <span
           className="mt-1 text-[18px] leading-none tracking-tight text-[#6b2d0e]"
-          style={SERIF}
+          style={LOGO_FONT}
         >
           High
         </span>
@@ -434,7 +427,7 @@ function TraceSection(): React.JSX.Element {
         <div className="flex items-center gap-4">
           <span
             className="text-[20px] tracking-tight text-[#1f2a23]"
-            style={SERIF}
+            style={LOGO_FONT}
           >
             Trace
           </span>
@@ -722,7 +715,7 @@ function CitationsPanel(): React.JSX.Element {
         <div className="flex items-baseline gap-2">
           <span
             className="text-[20px] tracking-tight text-[#1f2a23]"
-            style={SERIF}
+            style={LOGO_FONT}
           >
             Citations
           </span>

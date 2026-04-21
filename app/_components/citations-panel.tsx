@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import type { QueryResponse } from "../../shared/types";
 import { CitationCard } from "./citation-card";
 import {
-  SERIF,
+  LOGO_FONT,
   citationMarkerNumber,
   findRetrievalForCitation,
 } from "./shared";
@@ -35,7 +35,7 @@ export function CitationsPanel({
           <div className="flex items-baseline gap-2">
             <span
               className="text-[20px] tracking-tight text-[#1f2a23]"
-              style={SERIF}
+              style={LOGO_FONT}
             >
               Citations
             </span>
