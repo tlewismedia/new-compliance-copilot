@@ -28,7 +28,7 @@ export function Sidebar(): React.JSX.Element {
           className="text-[17px] tracking-tight text-[#1f2a23]"
           style={LOGO_FONT}
         >
-          Copilot
+          Starling Data
         </span>
       </Link>
 
