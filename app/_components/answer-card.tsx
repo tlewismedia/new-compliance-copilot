@@ -47,7 +47,7 @@ export function AnswerCard({
         className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(253,228,212,0.7) 0%, rgba(253,228,212,0) 70%)",
+            "radial-gradient(circle, rgba(253,228,212,0.7) 0%, rgba(253,228,212,0) 100%)",
         }}
       />
 
