@@ -1,0 +1,44 @@
+{
+  "id": "6192b395",
+  "savedAt": "2026-04-21T23:31:41.352Z",
+  "retrieval": {
+    "total": 30,
+    "mrr": 0.6975251322751322,
+    "ndcg": 0.721429767910232,
+    "keywordCoverage": 0.9111111111111112,
+    "pinpointPrecision": 0.9666666666666667,
+    "categories": [
+      {
+        "category": "Direct fact",
+        "avgMrr": 0.7048611111111112,
+        "count": 10
+      },
+      {
+        "category": "Spanning",
+        "avgMrr": 0.6906666666666667,
+        "count": 5
+      },
+      {
+        "category": "Relationship",
+        "avgMrr": 0.5527777777777777,
+        "count": 3
+      },
+      {
+        "category": "Comparative",
+        "avgMrr": 0.825,
+        "count": 4
+      },
+      {
+        "category": "Numerical",
+        "avgMrr": 0.8645833333333334,
+        "count": 4
+      },
+      {
+        "category": "Holistic",
+        "avgMrr": 0.5017857142857143,
+        "count": 4
+      }
+    ]
+  },
+  "answer": null
+}
