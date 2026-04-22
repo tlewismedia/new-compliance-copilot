@@ -40,7 +40,7 @@ import "dotenv/config";
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { execSync } from "child_process";
-import { graph } from "../pipeline/graph";
+import { getGraph } from "../pipeline/graph";
 import {
   JUDGE_MODEL,
   RETRIEVAL_K,
@@ -321,7 +321,7 @@ async function main(): Promise<void> {
     let judge: JudgeResult | undefined;
     if (!skipJudge) {
       try {
-        const state = await graph.invoke({ query: item.query });
+        const state = await getGraph().invoke({ query: item.query });
         answer = state.answer ?? "";
         judge = await judgeAnswer(openai, item, answer);
       } catch (err) {

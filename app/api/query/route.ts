@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { graph } from "../../../pipeline/graph";
+import { getGraph } from "../../../pipeline/graph";
 import type { QueryResponse } from "../../../shared/types";
 import { bumpQuery, logMemory, snapshot } from "../../../pipeline/instrument";
 import { record } from "../../../pipeline/daily-cap";
@@ -45,7 +45,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   try {
     const state = await withTimeout(
-      graph.invoke({ query }),
+      getGraph().invoke({ query }),
       REQUEST_TIMEOUT_MS,
       `graph.invoke #${n}`,
     );

@@ -44,6 +44,8 @@ type GlobalWithPipeline = typeof globalThis & {
 };
 
 const g = globalThis as GlobalWithPipeline;
-const pipeline: Pipeline = (g.__pipeline ??= buildPipeline());
 
-export const graph = pipeline.graph;
+export function getGraph() {
+  g.__pipeline ??= buildPipeline();
+  return g.__pipeline.graph;
+}

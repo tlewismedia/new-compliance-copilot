@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolve } from "path";
-import { graph } from "../../../../pipeline/graph";
+import { getGraph } from "../../../../pipeline/graph";
 import {
   createOpenAI,
   judgeAnswer,
@@ -68,7 +68,7 @@ export async function POST(): Promise<Response> {
         await Promise.all(
           loadedItems.map(async (item, i) => {
             try {
-              const state = await graph.invoke({ query: item.query });
+              const state = await getGraph().invoke({ query: item.query });
               const answer = state.answer ?? "";
               const judge = await judgeAnswer(client, item, answer);
               perItem.push({
