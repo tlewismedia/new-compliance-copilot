@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { graph } from "../../../pipeline/graph";
 import type { QueryResponse } from "../../../shared/types";
 import { bumpQuery, logMemory, snapshot } from "../../../pipeline/instrument";
+import { record } from "../../../pipeline/daily-cap";
+import { sendPushover } from "../../../pipeline/notify-pushover";
 
 const REQUEST_TIMEOUT_MS = 45_000;
 
@@ -19,6 +21,21 @@ export async function POST(request: Request): Promise<NextResponse> {
       { error: "Missing or invalid query" },
       { status: 400 },
     );
+  }
+
+  const cap = record();
+  if (!cap.allowed) {
+    return NextResponse.json(
+      { error: "Daily request limit reached. Please try again tomorrow." },
+      { status: 429 },
+    );
+  }
+  if (cap.justHitCap) {
+    // Fire and forget but log errors; never throw to the user.
+    void sendPushover(
+      "Compliance Copilot: daily cap hit",
+      `500/day request cap reached at ${new Date().toISOString()}. Limit resets at next UTC midnight.`,
+    ).catch((err) => console.error("[daily-cap] pushover failed", err));
   }
 
   const n = bumpQuery();
