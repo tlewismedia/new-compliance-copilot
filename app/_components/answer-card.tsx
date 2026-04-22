@@ -45,10 +45,10 @@ export function AnswerCard({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full"
+        className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle, rgba(253,228,212,0.7) 0%, rgba(253,228,212,0) 100%)",
+            "radial-gradient(circle at 90% 10%, rgba(253,228,212,0.45) 0%, rgba(253,228,212,0) 75%)",
         }}
       />
 
