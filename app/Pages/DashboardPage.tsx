@@ -97,9 +97,13 @@ export function DashboardPage(): React.JSX.Element {
   );
 
   return (
-    <main className="relative flex min-w-0 flex-1 items-stretch justify-center gap-8 px-8 pb-24 pt-4">
+    <main className="relative flex min-w-0 flex-1 items-stretch justify-center gap-8 px-8 pb-24 pt-6">
       <FlockLoader active={loading} />
-      <section className="flex w-full min-w-0 max-w-[700px] flex-col justify-center">
+      <section
+        className={`flex w-full min-w-0 max-w-[700px] flex-col transition-opacity duration-200 ${
+          result ? "justify-start" : "justify-center"
+        } ${loading ? "opacity-50" : "opacity-100"}`}
+      >
         <div className="space-y-2">
           <QuestionCard
             query={query}
