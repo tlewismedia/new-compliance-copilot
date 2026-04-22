@@ -48,7 +48,7 @@ export function AnswerCard({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 90% 10%, rgba(253,228,212,0.45) 0%, rgba(253,228,212,0) 75%)",
+            "radial-gradient(circle at 90% 10%, rgba(255,243,236,0.35) 0%, rgba(255,243,236,0) 75%)",
         }}
       />
 
