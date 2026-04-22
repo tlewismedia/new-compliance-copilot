@@ -195,7 +195,7 @@ function TraceNode({
 // at ~y=5 between the h-3 flanking lines.
 function TraceConnector(): React.JSX.Element {
   return (
-    <div className="flex py-1 pl-[33px]">
+    <div className="flex justify-center py-1">
       <div className="flex flex-col items-center gap-0.5">
         <div className="h-3 w-px bg-[#9cc9a9]/60" />
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
