@@ -25,7 +25,6 @@ export function DashboardPage(): React.JSX.Element {
   const [result, setResult] = useState<QueryResponse | null>(null);
   const [runMeta, setRunMeta] = useState<RunMeta | null>(null);
   const [submittedQuery, setSubmittedQuery] = useState<string>("");
-  const [panelOpen, setPanelOpen] = useState(false);
   const [highlightedChunkId, setHighlightedChunkId] = useState<string | null>(
     null,
   );
@@ -90,7 +89,6 @@ export function DashboardPage(): React.JSX.Element {
     if (!chunkId) return;
     setHighlightedChunkId(chunkId);
     setPulseKey((k) => k + 1);
-    setPanelOpen(true);
   }
 
   const tier = useMemo(
@@ -98,12 +96,10 @@ export function DashboardPage(): React.JSX.Element {
     [result],
   );
 
-  const canOpenPanel = !!result;
-
   return (
-    <main className="relative flex min-w-0 flex-1 justify-center px-8 pb-24 pt-4">
+    <main className="relative flex min-w-0 flex-1 items-stretch justify-center gap-8 px-8 pb-24 pt-4">
       <FlockLoader active={loading} />
-      <section className="mx-auto w-full min-w-0 max-w-[700px] space-y-6">
+      <section className="flex w-full min-w-0 max-w-[700px] flex-col justify-around">
         <QuestionCard
           query={query}
           setQuery={setQuery}
@@ -146,37 +142,13 @@ export function DashboardPage(): React.JSX.Element {
         )}
       </section>
 
-      <div className="absolute right-0 top-0 h-full">
-        <CitationsPanel
-          result={result}
-          open={panelOpen && canOpenPanel}
-          onClose={() => setPanelOpen(false)}
-          highlightedChunkId={highlightedChunkId}
-          pulseKey={pulseKey}
-        />
-      </div>
-
-      {!panelOpen && canOpenPanel && (
-        <button
-          type="button"
-          onClick={() => setPanelOpen(true)}
-          aria-label="Open citations"
-          className="absolute right-8 top-6 rounded-full bg-white/80 px-3 py-2 text-[11px] font-medium text-[#2d4a35] ring-1 ring-[#9cc9a9]/40 backdrop-blur-md transition-colors hover:bg-white"
-        >
-          <span className="inline-flex items-center gap-2">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path
-                d="M7.5 3L4.5 6L7.5 9"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Citations ({result?.citations.length ?? 0})
-          </span>
-        </button>
-      )}
+      <CitationsPanel
+        result={result}
+        open={!!result}
+        onClose={() => {}}
+        highlightedChunkId={highlightedChunkId}
+        pulseKey={pulseKey}
+      />
     </main>
   );
 }
