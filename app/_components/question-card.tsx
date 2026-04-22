@@ -1,3 +1,5 @@
+import { LOGO_FONT } from "./shared";
+
 export function QuestionCard({
   query,
   setQuery,
@@ -19,7 +21,8 @@ export function QuestionCard({
       <div className="flex items-center justify-between">
         <label
           htmlFor="question-input"
-          className="text-[11px] uppercase tracking-[0.18em] text-[#6b7a70]"
+          className="text-[20px] tracking-tight text-[#1f2a23]"
+          style={LOGO_FONT}
         >
           Question
         </label>

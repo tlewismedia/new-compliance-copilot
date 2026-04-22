@@ -3,6 +3,7 @@ import type { Citation, Retrieval } from "../../shared/types";
 import { Card } from "./card";
 import {
   type ConfidenceTier,
+  LOGO_FONT,
   parseAnswerParts,
   findRetrievalForCitation,
   citationMarkerNumber,
@@ -52,9 +53,12 @@ export function AnswerCard({
       />
 
       <div className="flex items-start justify-between gap-4">
-        <label className="text-[11px] uppercase tracking-[0.18em] text-[#6b7a70]">
+        <h2
+          className="text-[20px] tracking-tight text-[#1f2a23]"
+          style={LOGO_FONT}
+        >
           Answer
-        </label>
+        </h2>
         <ConfidenceBadge tier={tier} />
       </div>
 
