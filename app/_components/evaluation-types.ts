@@ -82,7 +82,11 @@ export interface SavedReport extends SavedReportMeta {
  * What the `/evaluations` page renders, after reconciling the live session
  * state against any currently-selected saved report.
  *
- *   - `selectedId === ""`  → live session (whatever the user ran).
+ *   - `selectedId === ""`  → no saved report is currently selected; render
+ *                            the live session state (whatever the user ran
+ *                            this session, or empty cards if nothing yet).
+ *                            This is the page's transient state during a
+ *                            live run and the empty-list initial state.
  *   - `selectedId !== ""`  → the saved report's persisted summaries, or
  *                            null where the saved report didn't include
  *                            that section.

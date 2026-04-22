@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnswerEvaluation } from "../_components/answer-evaluation";
 import { ReportSelector } from "../_components/report-selector";
 import { RetrievalEvaluation } from "../_components/retrieval-evaluation";
@@ -26,13 +26,18 @@ import {
  *   - the "live session" state for the two evaluation sections (running
  *     flags, progress counters, summaries, errors),
  *   - the list of saved reports and which one is currently selected
- *     (`""` = live session, any id = a saved report).
+ *     (`""` = no saved report selected — either no saved reports exist
+ *     yet, or the user just kicked off a live run, any id = a saved
+ *     report).
+ *
+ * On mount, after the saved-report list resolves, we auto-select the
+ * latest saved report so the page renders historical data by default.
+ * When the user clicks Run, `selectedId` flips to `""` so the live
+ * progress + summary takes over. After a successful save, `selectedId`
+ * flips to the new report's id so the dropdown highlights it.
  *
  * When a saved report is selected, the two sections render the persisted
  * summaries and their `Run evaluation` buttons are disabled with a tooltip.
- * Selecting `Current` restores the live session state — we never replace
- * the live state in place, so the user can always toggle back and see
- * whatever they ran this session.
  */
 export function EvaluationsPage(): React.JSX.Element {
   // ── live session state ────────────────────────────────────────────────
@@ -59,7 +64,10 @@ export function EvaluationsPage(): React.JSX.Element {
   const [savedReports, setSavedReports] = useState<readonly SavedReportMeta[]>(
     [],
   );
-  const [selectedId, setSelectedId] = useState<string>(""); // "" = Current
+  // "" = no saved report selected (either none exist yet, or the user is
+  // mid-run / just-ran). On mount, this flips to the latest saved report's
+  // id once the list fetch resolves.
+  const [selectedId, setSelectedId] = useState<string>("");
   const [loadedReport, setLoadedReport] = useState<SavedReport | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -71,7 +79,23 @@ export function EvaluationsPage(): React.JSX.Element {
   // run (which produces a new summary) re-enables the button.
   const [justSaved, setJustSaved] = useState(false);
 
-  // Fetch the saved-report list on mount so the dropdown is populated.
+  // Refs mirroring the live-session state. The mount effect uses these to
+  // decide, at the moment the saved-report list resolves, whether the user
+  // has already kicked off a live run — if so, we must NOT yank `selectedId`
+  // out from under them by auto-selecting the latest saved report.
+  const retrievalSummaryRef = useRef(retrievalSummary);
+  const answerSummaryRef = useRef(answerSummary);
+  const retrievalRunningRef = useRef(retrievalRunning);
+  const answerRunningRef = useRef(answerRunning);
+  retrievalSummaryRef.current = retrievalSummary;
+  answerSummaryRef.current = answerSummary;
+  retrievalRunningRef.current = retrievalRunning;
+  answerRunningRef.current = answerRunning;
+
+  // Fetch the saved-report list on mount so the dropdown is populated, and
+  // auto-select the latest entry so the page renders historical data by
+  // default. If the user has somehow kicked off a live run before the list
+  // resolves, leave `selectedId` alone so the live state stays visible.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -79,7 +103,17 @@ export function EvaluationsPage(): React.JSX.Element {
         const res = await fetch("/api/evaluations/reports");
         if (!res.ok) return;
         const body = (await res.json()) as { reports: SavedReportMeta[] };
-        if (!cancelled) setSavedReports(body.reports ?? []);
+        if (cancelled) return;
+        const reports = body.reports ?? [];
+        setSavedReports(reports);
+        const noLiveRun =
+          retrievalSummaryRef.current === null &&
+          answerSummaryRef.current === null &&
+          !retrievalRunningRef.current &&
+          !answerRunningRef.current;
+        if (reports.length > 0 && noLiveRun) {
+          setSelectedId(reports[0].id);
+        }
       } catch {
         // List failure is non-fatal: the user can still run evaluations.
       }
@@ -120,9 +154,12 @@ export function EvaluationsPage(): React.JSX.Element {
     };
   }, [selectedId]);
 
-  // ── run handlers (only fire when viewing `Current`) ───────────────────
+  // ── run handlers (only fire when no saved report is selected) ─────────
   async function handleRunRetrieval() {
     if (retrievalRunning) return;
+    // Switch out of any saved-report view so the live progress + summary
+    // takes over the cards.
+    setSelectedId("");
     setRetrievalRunning(true);
     setRetrievalError(null);
     setRetrievalSummary(null);
@@ -160,6 +197,9 @@ export function EvaluationsPage(): React.JSX.Element {
 
   async function handleRunAnswer() {
     if (answerRunning) return;
+    // Switch out of any saved-report view so the live progress + summary
+    // takes over the cards.
+    setSelectedId("");
     setAnswerRunning(true);
     setAnswerError(null);
     setAnswerSummary(null);
@@ -216,6 +256,9 @@ export function EvaluationsPage(): React.JSX.Element {
       }
       const meta = (await res.json()) as SavedReportMeta;
       setSavedReports((prev) => [meta, ...prev]);
+      // Auto-select the freshly-saved report so the dropdown highlights it
+      // and the cards switch to the persisted view.
+      setSelectedId(meta.id);
       // Success path: flip the button into its "Report Saved" confirmation
       // state. This only runs if the POST returned ok and parsed cleanly.
       setJustSaved(justSavedOnSaveComplete(true));
