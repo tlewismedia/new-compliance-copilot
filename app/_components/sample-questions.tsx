@@ -55,7 +55,7 @@ export function SampleQuestions({
 
   return (
     <div
-      className="flex items-center gap-2"
+      className="flex flex-wrap items-center justify-center gap-2"
       data-testid="sample-questions"
     >
       <button
@@ -79,9 +79,9 @@ export function SampleQuestions({
         type="button"
         onClick={() => onSelect(current.question)}
         aria-label={`Use sample question for ${current.topic}`}
-        className="group flex min-w-0 flex-1 items-center justify-center text-center transition-colors hover:text-[#2d4a35] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
+        className="group flex min-w-0 items-center justify-center text-center transition-colors hover:text-[#2d4a35] focus:outline-none focus:ring-2 focus:ring-[#9cc9a9]/40"
       >
-        <span className="min-w-0 flex-1 text-center text-[13px] leading-relaxed text-[#1f2a23]">
+        <span className="min-w-0 max-w-[480px] text-center text-[13px] leading-relaxed text-[#6b7a70]">
           {current.question}
         </span>
       </button>
