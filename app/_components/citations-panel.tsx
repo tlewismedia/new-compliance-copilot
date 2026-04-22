@@ -26,11 +26,11 @@ export function CitationsPanel({
     <aside
       aria-hidden={!open}
       className={`shrink-0 overflow-hidden transition-[width,opacity] duration-300 ease-out ${
-        open ? "w-[360px] opacity-100" : "w-0 opacity-0"
+        open ? "w-[320px] opacity-100" : "w-0 opacity-0"
       }`}
       data-testid="citations-panel"
     >
-      <div className="sticky top-6 w-[360px] space-y-4 pr-1">
+      <div className="w-[320px] space-y-4 pr-1">
         <div className="flex items-end justify-between px-1">
           <div className="flex items-baseline gap-2">
             <span
