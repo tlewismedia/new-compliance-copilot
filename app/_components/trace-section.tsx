@@ -31,7 +31,7 @@ export function TraceSection({
 
   return (
     <div className="pt-2" data-testid="trace">
-      <div className="mb-1 flex flex-wrap items-center gap-4">
+      <div className="mb-1 flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -62,7 +62,7 @@ export function TraceSection({
             Trace
           </span>
         </button>
-        <div className="flex flex-wrap items-center gap-4 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] text-[#435048] ring-1 ring-[#2d4a35]/[0.08] backdrop-blur-md">
+        <div className="flex items-center gap-4 rounded-full bg-white/60 px-3.5 py-1.5 text-[11px] text-[#435048] ring-1 ring-[#2d4a35]/[0.08] backdrop-blur-md">
           <TraceMeta label="Run" value={`#${runMeta.run}`} mono />
           <span className="h-2.5 w-px bg-[#2d4a35]/15" />
           <TraceMeta label="When" value={runMeta.when} />
